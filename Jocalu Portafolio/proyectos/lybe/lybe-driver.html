@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Lybe Driver | Professional Dashboard</title>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+
+<!-- QR Code Library -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --primary: #007AFF;
+  --primary-dark: #0056CC;
+  --primary-light: #E3F2FF;
+  --success: #10B981;
+  --success-light: #D1FAE5;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --danger-light: #FEE2E2;
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --white: #FFFFFF;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+}
+
+body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(--gray-800); overflow: hidden; }
+
+.screen { position: fixed; inset: 0; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; background: var(--gray-50); overflow-y: auto; }
+.screen.active { opacity: 1; pointer-events: all; }
+
+/* Auth Screen */
+#auth-screen { justify-content: center; align-items: center; padding: 32px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.auth-card { background: var(--white); border-radius: var(--radius-2xl); padding: 32px 28px; width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); }
+.auth-logo { text-align: center; margin-bottom: 32px; }
+.auth-logo .icon { width: 64px; height: 64px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px; font-weight: 700; color: white; }
+.auth-logo h1 { font-size: 28px; font-weight: 800; color: var(--gray-800); }
+.auth-logo p { font-size: 13px; color: var(--gray-500); margin-top: 4px; }
+.tabs { display: flex; gap: 8px; background: var(--gray-100); padding: 4px; border-radius: var(--radius-md); margin-bottom: 24px; }
+.tab-btn { flex: 1; padding: 10px; border: none; background: transparent; font-size: 14px; font-weight: 600; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; color: var(--gray-500); }
+.tab-btn.active { background: var(--primary); color: white; }
+.input-group { margin-bottom: 16px; }
+.input-group label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
+.input-group input, .input-group textarea { width: 100%; padding: 12px 16px; background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-md); font-size: 14px; font-family: 'Inter', sans-serif; transition: all 0.2s; outline: none; }
+.input-group input:focus, .input-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,122,255,0.1); }
+.btn-primary { width: 100%; padding: 14px; background: var(--primary); border: none; border-radius: var(--radius-md); color: white; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.btn-google { width: 100%; padding: 12px; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; transition: all 0.2s; margin-top: 12px; font-weight: 500; }
+.btn-google:hover { background: var(--gray-50); border-color: var(--gray-300); }
+.divider { display: flex; align-items: center; margin: 20px 0; color: var(--gray-400); font-size: 12px; }
+.divider-line { flex: 1; height: 1px; background: var(--gray-200); }
+.divider-text { padding: 0 12px; }
+.auth-error { background: var(--danger-light); border: 1px solid var(--danger); border-radius: var(--radius-md); padding: 10px 14px; font-size: 12px; color: var(--danger); margin-top: 12px; display: none; }
+.loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+.loading-overlay.show { display: flex; }
+.spinner { width: 40px; height: 40px; border: 3px solid var(--gray-200); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Complete Registration */
+#complete-reg-screen { justify-content: center; align-items: center; padding: 32px 24px; }
+.complete-card { background: var(--white); border-radius: var(--radius-2xl); padding: 32px 28px; width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); }
+.complete-title { font-size: 24px; font-weight: 800; text-align: center; color: var(--gray-800); margin-bottom: 8px; }
+.complete-subtitle { text-align: center; color: var(--gray-500); font-size: 13px; margin-bottom: 24px; }
+
+/* Main App */
+#main-screen { background: var(--gray-50); }
+
+/* Topbar - SOLO PARA DASHBOARD */
+.topbar { background: var(--white); padding: 16px 20px; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; }
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.avatar { width: 52px; height: 52px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: white; overflow: hidden; cursor: pointer; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.topbar-name { font-size: 16px; font-weight: 700; color: var(--gray-800); }
+.topbar-sub { font-size: 12px; color: var(--gray-500); }
+.availability-toggle { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--gray-100); border-radius: 30px; cursor: pointer; font-size: 13px; font-weight: 500; }
+.availability-toggle.available { background: var(--success-light); color: var(--success); }
+.avail-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray-400); }
+.availability-toggle.available .avail-dot { background: var(--success); }
+
+/* Content */
+.content { flex: 1; overflow-y: auto; padding: 20px; }
+.content::-webkit-scrollbar { display: none; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* Bottom Navigation */
+.bottom-nav { background: var(--white); border-top: 1px solid var(--gray-200); padding: 8px 0 20px; display: flex; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border: none; background: transparent; color: var(--gray-500); cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+.nav-item.active { color: var(--primary); }
+.nav-item svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; }
+.nav-item span { font-size: 11px; font-weight: 500; }
+
+/* Dashboard Cards */
+.metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.metric-card { background: var(--white); border-radius: var(--radius-lg); padding: 16px 12px; text-align: center; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200); }
+.metric-val { font-size: 24px; font-weight: 800; color: var(--primary); }
+.metric-label { font-size: 12px; color: var(--gray-500); margin-top: 4px; font-weight: 500; }
+.section-title { font-size: 16px; font-weight: 700; color: var(--gray-800); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.section-title a { font-size: 13px; color: var(--primary); cursor: pointer; font-weight: 600; }
+
+/* Quick Actions */
+.quick-actions-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.quick-action-item { background: var(--white); border-radius: var(--radius-lg); padding: 16px 8px; text-align: center; cursor: pointer; border: 1px solid var(--gray-200); transition: all 0.2s; }
+.quick-action-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.quick-icon { width: 48px; height: 48px; background: var(--primary-light); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+.quick-icon svg { width: 24px; height: 24px; stroke: var(--primary); stroke-width: 1.5; fill: none; }
+.quick-label { font-size: 12px; font-weight: 600; color: var(--gray-700); }
+
+/* Availability */
+.availability-card { background: var(--white); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 20px; border: 1px solid var(--gray-200); }
+.availability-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.availability-title { font-weight: 700; color: var(--gray-800); }
+.switch { width: 44px; height: 24px; background: var(--gray-300); border-radius: 30px; cursor: pointer; transition: all 0.2s; position: relative; }
+.switch.active { background: var(--success); }
+.switch::after { content: ''; width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 3px; transition: all 0.2s; }
+.switch.active::after { left: 21px; }
+.availability-status { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--gray-50); border-radius: var(--radius-md); }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; }
+.status-dot.online { background: var(--success); }
+.status-dot.offline { background: var(--gray-400); }
+
+/* Frequent Passengers */
+.frequent-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 20px; }
+.frequent-scroll::-webkit-scrollbar { height: 4px; }
+.passenger-card { min-width: 140px; background: var(--white); border-radius: var(--radius-lg); padding: 12px; border: 1px solid var(--gray-200); cursor: pointer; }
+.passenger-avatar { width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin-bottom: 10px; color: white; font-weight: 700; font-size: 18px; overflow: hidden; }
+.passenger-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.passenger-rating { font-size: 12px; color: var(--gray-500); }
+.passenger-trips { font-size: 11px; color: var(--primary); margin-top: 4px; }
+
+/* Profile Page */
+.profile-container { max-width: 500px; margin: 0 auto; }
+.profile-card { background: var(--white); border-radius: var(--radius-xl); padding: 28px 24px; text-align: center; margin-bottom: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200); }
+.profile-avatar-large { width: 88px; height: 88px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 36px; font-weight: 700; color: white; overflow: hidden; cursor: pointer; }
+.profile-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+.profile-name-large { font-size: 22px; font-weight: 800; color: var(--gray-800); margin-bottom: 6px; }
+.profile-code-badge { display: inline-block; padding: 4px 12px; background: var(--primary-light); border-radius: 30px; font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 8px; }
+.profile-join-date { font-size: 12px; color: var(--gray-500); margin-bottom: 16px; }
+.profile-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 30px; font-size: 12px; font-weight: 600; }
+.profile-status-badge.online { background: var(--success-light); color: var(--success); }
+.profile-status-badge.offline { background: var(--gray-100); color: var(--gray-600); }
+.status-dot-small { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.stat-card { background: var(--white); border-radius: var(--radius-lg); padding: 16px; text-align: center; border: 1px solid var(--gray-200); cursor: pointer; transition: all 0.2s; }
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.stat-icon { width: 44px; height: 44px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+.stat-value { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.stat-label { font-size: 12px; font-weight: 500; }
+.info-section { background: var(--white); border-radius: var(--radius-xl); padding: 20px; margin-bottom: 20px; border: 1px solid var(--gray-200); }
+.info-section-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; color: var(--gray-800); }
+.info-section-title svg { width: 20px; height: 20px; stroke: var(--primary); stroke-width: 1.5; fill: none; }
+.info-row-custom { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--gray-100); }
+.info-row-custom:last-child { border-bottom: none; }
+.info-icon { width: 40px; height: 40px; background: var(--gray-100); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; }
+.info-icon svg { width: 20px; height: 20px; stroke: var(--primary); stroke-width: 1.5; fill: none; }
+.info-content { flex: 1; }
+.info-label-small { font-size: 11px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.info-value-text { font-size: 15px; font-weight: 600; color: var(--gray-800); }
+.info-badge { padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.info-badge.inactive { background: var(--gray-200); color: var(--gray-600); }
+.profile-edit-btn { margin-top: 16px; width: 100%; padding: 12px; background: var(--gray-100); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }
+
+/* Vehicles Page */
+.vehicle-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; }
+.vehicle-card.primary { border-color: var(--primary); background: var(--primary-light); }
+.vehicle-header { display: flex; align-items: center; gap: 14px; }
+.vehicle-icon { width: 48px; height: 48px; background: var(--gray-100); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; }
+.vehicle-icon svg { width: 24px; height: 24px; stroke: var(--primary); stroke-width: 1.5; fill: none; }
+.vehicle-name { font-size: 16px; font-weight: 700; color: var(--gray-800); }
+.vehicle-plate { font-size: 12px; color: var(--gray-500); }
+.vehicle-actions { display: flex; gap: 10px; margin-top: 14px; }
+.btn-small { flex: 1; padding: 8px; background: transparent; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 12px; cursor: pointer; transition: all 0.2s; }
+.btn-small:hover { border-color: var(--primary); color: var(--primary); }
+.btn-small.danger:hover { border-color: var(--danger); color: var(--danger); }
+.add-vehicle-card { background: var(--gray-50); border: 2px dashed var(--gray-300); border-radius: var(--radius-lg); padding: 24px; text-align: center; cursor: pointer; }
+.add-vehicle-text { font-size: 14px; color: var(--gray-500); font-weight: 500; }
+
+/* QR Page */
+.qr-section { display: flex; flex-direction: column; align-items: center; padding: 20px 0; }
+.qr-card { background: white; border-radius: var(--radius-2xl); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-lg); display: flex; justify-content: center; align-items: center; min-height: 260px; }
+#qr-canvas { width: 200px; height: 200px; display: block; margin: 0 auto; }
+.download-btn { padding: 12px 32px; background: var(--primary); border: none; border-radius: 40px; color: white; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+
+/* Menu Page */
+.menu-section { margin-bottom: 24px; }
+.menu-section-title { font-size: 11px; font-weight: 700; color: var(--gray-500); letter-spacing: 1px; margin-bottom: 12px; padding-left: 8px; }
+.menu-tile { display: flex; align-items: center; gap: 16px; padding: 14px 16px; background: var(--white); border-radius: var(--radius-md); margin-bottom: 8px; cursor: pointer; border: 1px solid var(--gray-100); transition: all 0.2s; }
+.menu-tile:hover { background: var(--gray-50); border-color: var(--gray-200); }
+.menu-tile-icon { width: 40px; height: 40px; background: var(--gray-100); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; }
+.menu-tile-icon svg { width: 20px; height: 20px; stroke: var(--primary); stroke-width: 1.5; fill: none; }
+.menu-tile-text { flex: 1; font-weight: 500; }
+.menu-tile-badge { padding: 4px 10px; background: var(--primary-light); border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--primary); }
+.logout-btn { margin-top: 20px; padding: 14px; background: transparent; border: 1px solid var(--danger); border-radius: var(--radius-md); color: var(--danger); font-weight: 700; cursor: pointer; width: 100%; transition: all 0.2s; }
+.logout-btn:hover { background: var(--danger); color: white; }
+
+/* Rides Page */
+.rides-tab-bar { display: flex; background: white; border-bottom: 1px solid var(--gray-200); margin-bottom: 16px; }
+.rides-tab { flex: 1; padding: 14px; text-align: center; font-weight: 600; font-size: 14px; color: var(--gray-500); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.rides-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.ride-card { background: white; border-radius: 16px; margin-bottom: 12px; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200); overflow: hidden; cursor: pointer; transition: all 0.2s; }
+.ride-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.stats-banner { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 16px; padding: 16px; margin: 0 0 16px 0; color: white; display: flex; justify-content: space-around; }
+.empty-state { text-align: center; padding: 60px 24px; color: var(--gray-400); }
+
+/* Modals */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: flex-end; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal-bottom { background: var(--white); border-radius: 28px 28px 0 0; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 40px; height: 4px; background: var(--gray-200); border-radius: 2px; margin: 16px auto; }
+
+.toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--gray-800); color: white; padding: 10px 20px; border-radius: 40px; font-size: 13px; opacity: 0; transition: all 0.3s; z-index: 1100; white-space: nowrap; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--success); }
+</style>
+</head>
+<body>
+
+<div id="page-loader" style="position:fixed;inset:0;background:white;display:flex;align-items:center;justify-content:center;z-index:300;flex-direction:column">
+  <div style="width:56px;height:56px;background:linear-gradient(135deg,#007AFF,#0056CC);border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:28px;color:white">LY</div>
+  <div style="font-size:28px;font-weight:800;letter-spacing:3px">LYBE</div><div style="color:gray;font-size:12px">Driver Panel</div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><div style="color:white">Cargando...</div></div>
+
+<!-- Auth Screen -->
+<div class="screen active" id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo"><div class="icon">LY</div><h1>LYBE</h1><p>Driver Portal</p></div>
+    <div class="tabs"><button class="tab-btn active" onclick="switchTab('login')">Iniciar Sesión</button><button class="tab-btn" onclick="switchTab('register')">Registrarse</button></div>
+    <div id="tab-login"><div class="input-group"><label>Email</label><input type="email" id="login-email"></div><div class="input-group"><label>Contraseña</label><input type="password" id="login-pass"></div><button class="btn-primary" onclick="doLogin()">Iniciar Sesión</button><div class="divider"><div class="divider-line"></div><span class="divider-text">O</span><div class="divider-line"></div></div><button class="btn-google" onclick="signInWithGoogle()"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Google</button><div class="auth-error" id="login-error"></div></div>
+    <div id="tab-register" style="display:none"><div class="input-group"><label>Nombre</label><input type="text" id="reg-name"></div><div style="display:flex;gap:12px"><div class="input-group" style="flex:1"><label>Email</label><input type="email" id="reg-email"></div><div class="input-group" style="flex:1"><label>Teléfono</label><input type="tel" id="reg-phone"></div></div><div class="input-group"><label>Contraseña</label><input type="password" id="reg-pass"></div><button class="btn-primary" onclick="doRegister()">Crear cuenta</button><div class="divider"><div class="divider-line"></div><span class="divider-text">O</span><div class="divider-line"></div></div><button class="btn-google" onclick="signUpWithGoogle()"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Google</button><div class="auth-error" id="register-error"></div></div>
+  </div>
+</div>
+
+<div class="screen" id="complete-reg-screen">
+  <div class="complete-card"><div class="complete-title">¡Bienvenido!</div><div class="complete-subtitle">Completa tu perfil</div>
+    <div class="input-group"><label>Teléfono</label><input type="tel" id="complete-phone"></div>
+    <div class="input-group"><label>Licencia</label><input type="text" id="complete-license"></div>
+    <button class="btn-primary" onclick="completeRegistration()">Continuar</button><div class="auth-error" id="complete-error"></div>
+  </div>
+</div>
+
+<!-- Main Screen -->
+<div class="screen" id="main-screen">
+  <!-- TOPBAR SOLO PARA DASHBOARD (sin botón de logout) -->
+  <div id="dashboardTopbar" style="display:none">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="avatar" id="user-avatar" onclick="goToMenuProfile()">--</div>
+        <div>
+          <div class="topbar-name" id="user-name">Conductor</div>
+          <div class="topbar-sub" id="user-vehicle">--</div>
+        </div>
+      </div>
+      <div class="availability-toggle" id="avail-toggle" onclick="toggleAvailability()">
+        <div class="avail-dot"></div>
+        <span id="avail-text">Offline</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content" id="mainContent">
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="metrics-row"><div class="metric-card"><div class="metric-val" id="m-today">0</div><div class="metric-label">Hoy</div></div><div class="metric-card"><div class="metric-val" id="m-rating">--</div><div class="metric-label">Calificación</div></div><div class="metric-card"><div class="metric-val" id="m-earnings">$0</div><div class="metric-label">Ganancia</div></div></div>
+      <div class="quick-actions-row"><div class="quick-action-item" onclick="showToast('Próximamente','')"><div class="quick-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="quick-label">Agenda</div></div><div class="quick-action-item" onclick="showToast('Próximamente','')"><div class="quick-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="quick-label">Clientes</div></div><div class="quick-action-item" onclick="showToast('Próximamente','')"><div class="quick-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="quick-label">Ganancias</div></div><div class="quick-action-item" onclick="setPage(2); showMenuSubview('qr')"><div class="quick-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div><div class="quick-label">Mi QR</div></div></div>
+      <div class="availability-card"><div class="availability-header"><span>Estado Actual</span><div class="switch" id="availability-switch" onclick="toggleAvailability()"></div></div><div class="availability-status"><div class="status-dot offline" id="status-dot"></div><span id="status-text">No disponible</span></div></div>
+      <div class="section-title">Pasajeros frecuentes</div><div class="frequent-scroll" id="frequent-passengers-list"></div>
+      <div class="section-title">Próximos viajes <a onclick="setPage(1)">Ver todos</a></div><div id="upcoming-rides-list"></div>
+    </div>
+    
+    <!-- TRIPS -->
+    <div class="page" id="page-trips">
+      <div class="rides-tab-bar">
+        <div class="rides-tab active" data-ridestab="active" onclick="switchRidesTab('active')">Activos <span id="ridesActiveCount">(0)</span></div>
+        <div class="rides-tab" data-ridestab="completed" onclick="switchRidesTab('completed')">Completados <span id="ridesCompletedCount">(0)</span></div>
+        <div class="rides-tab" data-ridestab="cancelled" onclick="switchRidesTab('cancelled')">Cancelados <span id="ridesCancelledCount">(0)</span></div>
+      </div>
+      <div id="ridesActiveTab" class="rides-tab-content"></div>
+      <div id="ridesCompletedTab" class="rides-tab-content" style="display:none"></div>
+      <div id="ridesCancelledTab" class="rides-tab-content" style="display:none"></div>
+    </div>
+    
+    <!-- MENU -->
+    <div class="page" id="page-menu">
+      <div id="menu-main">
+        <div style="background:linear-gradient(135deg,#007AFF,#0056CC);border-radius:20px;padding:20px;margin-bottom:20px;color:white"><div style="display:flex;align-items:center;gap:16px"><div class="avatar" id="menu-avatar" style="width:60px;height:60px;background:white;color:#007AFF;border-radius:30px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700">--</div><div><div id="menu-name" style="font-size:18px;font-weight:700">--</div><div id="menu-code" style="font-size:11px;opacity:0.8">--</div></div></div></div>
+        <div class="menu-section"><div class="menu-section-title">SUSCRIPCIÓN</div><div class="menu-tile" onclick="showToast('Próximamente','')"><div class="menu-tile-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M8 8h8M8 12h6"/></svg></div><div class="menu-tile-text">Mi Suscripción</div><div class="menu-tile-badge" id="subscription-badge">BÁSICO</div></div></div>
+        <div class="menu-section"><div class="menu-section-title">CONFIGURACIÓN</div><div class="menu-tile" onclick="showMenuSubview('profile')"><div class="menu-tile-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="menu-tile-text">Mi Perfil</div></div><div class="menu-tile" onclick="showMenuSubview('vehicles')"><div class="menu-tile-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="12" rx="2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg></div><div class="menu-tile-text">Mis Vehículos</div></div><div class="menu-tile" onclick="showToast('Próximamente','')"><div class="menu-tile-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H5.78a1.65 1.65 0 0 0-1.51 1 1.65 1.65 0 0 0 .33 1.82l.07.08A10 10 0 0 0 12 17.66a10 10 0 0 0 6.18-2.58l.07-.08z"/></svg></div><div class="menu-tile-text">Ajustes</div></div></div>
+        <div class="menu-section"><div class="menu-section-title">AYUDA</div><div class="menu-tile" onclick="showToast('Próximamente','')"><div class="menu-tile-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="menu-tile-text">Centro de Ayuda</div></div></div>
+        <button class="logout-btn" onclick="doLogout()">CERRAR SESIÓN</button>
+      </div>
+      <div id="menu-profile" style="display:none"><div class="section-title"><button onclick="showMenuSubview('main')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:16px">← Volver</button> Mi Perfil</div><div id="profile-content"></div></div>
+      <div id="menu-vehicles" style="display:none"><div class="section-title"><button onclick="showMenuSubview('main')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:16px">← Volver</button> Mis Vehículos</div><div id="vehicles-list"></div><div class="add-vehicle-card" onclick="openAddVehicleModal()"><div class="add-vehicle-text">+ Agregar vehículo</div></div></div>
+      <div id="menu-qr" style="display:none"><div class="section-title"><button onclick="showMenuSubview('main')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:16px">← Volver</button> Mi QR</div><div class="qr-section"><div class="qr-card"><canvas id="qr-canvas" width="200" height="200"></canvas></div><button class="download-btn" onclick="downloadQRCode()">Descargar QR</button></div></div>
+    </div>
+  </div>
+  
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="setPage(0)"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Dashboard</span></button>
+    <button class="nav-item" onclick="setPage(1)"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span>Trips</span></button>
+    <button class="nav-item" onclick="setPage(2)"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg><span>Menu</span></button>
+  </div>
+</div>
+
+<!-- Modales -->
+<div class="modal-overlay" id="edit-profile-modal"><div class="modal"><div class="modal-handle"></div><div class="modal-title">Editar perfil</div><div class="input-group"><label>Nombre completo</label><input type="text" id="edit-name"></div><div class="input-group"><label>Teléfono</label><input type="tel" id="edit-phone"></div><div class="input-group"><label>Licencia</label><input type="text" id="edit-license"></div><button class="btn-primary" onclick="saveProfileChanges()">Guardar</button><button class="btn-primary" style="background:var(--gray-200);color:var(--gray-700);margin-top:8px" onclick="closeEditProfileModal()">Cancelar</button></div></div>
+<div class="modal-overlay" id="vehicle-modal"><div class="modal"><div class="modal-handle"></div><div class="modal-title">Agregar vehículo</div><div class="input-group"><label>Modelo</label><input id="vehicle-model" placeholder="Toyota Corolla"></div><div style="display:flex;gap:12px"><div class="input-group" style="flex:1"><label>Año</label><input id="vehicle-year" placeholder="2023"></div><div class="input-group" style="flex:1"><label>Color</label><input id="vehicle-color" placeholder="Blanco"></div></div><div style="display:flex;gap:12px"><div class="input-group" style="flex:1"><label>Placa</label><input id="vehicle-plate" placeholder="ABC123"></div><div class="input-group" style="flex:1"><label>Capacidad</label><input id="vehicle-capacity" value="4"></div></div><div class="input-group"><label><input type="checkbox" id="vehicle-primary"> Vehículo principal</label></div><button class="btn-primary" onclick="saveVehicle()">Guardar</button><button class="btn-primary" style="background:var(--gray-200);margin-top:8px" onclick="closeVehicleModal()">Cancelar</button></div></div>
+<div class="modal-overlay" id="rideModal"><div class="modal-bottom"><div class="modal-handle"></div><div style="padding:20px" id="rideModalContent"></div></div></div>
+<div class="modal-overlay" id="actionModal"><div class="modal-bottom"><div class="modal-handle"></div><div style="padding:20px" id="actionModalContent"></div></div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBEcOpOAFuBkHsD46OnTBRvjUONTkbxDQ8",
+  authDomain: "lybe-driver-app.firebaseapp.com",
+  projectId: "lybe-driver-app",
+  storageBucket: "lybe-driver-app.firebasestorage.app",
+  messagingSenderId: "536788488637",
+  appId: "1:536788488637:web:46452007a6fbcb563c42d4"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+let currentUser = null, currentDriverId = null, pendingCompleteUser = null;
+let vehicles = [], driverData = {}, pendingRides = [], confirmedRides = [], frequentPassengers = [];
+let activeRides = [], completedRides = [], cancelledRides = [];
+let totalEarnings = 0, monthlyEarnings = 0;
+
+function showToast(msg, type) { const t=document.getElementById('toast'); t.textContent=msg; t.className='toast '+(type||'')+' show'; setTimeout(()=>t.className='toast',2500); }
+function showLoading(show) { document.getElementById('loadingOverlay').classList.toggle('show', show); }
+
+// ============ FUNCIONES DE VIAJES ============
+async function loadDriverRidesFromFirestore() {
+  if (!currentDriverId) return;
+  showLoading(true);
+  try {
+    const ridesSnapshot = await db.collection('rides')
+      .where('driverId', '==', currentDriverId)
+      .orderBy('scheduledTime', 'desc')
+      .get();
+    
+    const activeList = [];
+    const completedList = [];
+    const cancelledList = [];
+    
+    for (const doc of ridesSnapshot.docs) {
+      const ride = { id: doc.id, ...doc.data() };
+      if (ride.passengerId) {
+        try {
+          const passengerDoc = await db.collection('users').doc(ride.passengerId).get();
+          if (passengerDoc.exists) {
+            ride.passengerName = passengerDoc.data().name || 'Pasajero';
+            ride.passengerPhone = passengerDoc.data().phone || '';
+          }
+        } catch(e) {}
+      }
+      const status = ride.status || 'pending';
+      if (status === 'pending' || status === 'accepted' || status === 'enroute' || status === 'inprogress') activeList.push(ride);
+      else if (status === 'completed') completedList.push(ride);
+      else if (status === 'cancelled_by_driver' || status === 'cancelled_by_passenger') cancelledList.push(ride);
+    }
+    activeList.sort((a,b) => (a.scheduledTime?.toDate ? a.scheduledTime.toDate() : 0) - (b.scheduledTime?.toDate ? b.scheduledTime.toDate() : 0));
+    activeRides = activeList; completedRides = completedList; cancelledRides = cancelledList;
+    let total = 0, monthly = 0;
+    const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    completedList.forEach(ride => {
+      const earnings = ride.actualEarnings || ride.estimatedEarnings || 0;
+      total += earnings;
+      const completedAt = ride.completionTime?.toDate ? ride.completionTime.toDate() : null;
+      if (completedAt && completedAt > thirtyDaysAgo) monthly += earnings;
+    });
+    totalEarnings = total; monthlyEarnings = monthly;
+    renderActiveRides(); renderCompletedRides(); renderCancelledRides();
+  } catch(e) { console.error(e); }
+  showLoading(false);
+}
+
+async function updateRideStatusInFirestore(rideId, newStatus) {
+  showLoading(true);
+  try {
+    const updates = { status: newStatus, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+    if (newStatus === 'accepted') updates.acceptedTime = firebase.firestore.FieldValue.serverTimestamp();
+    if (newStatus === 'enroute') updates.pickupTime = firebase.firestore.FieldValue.serverTimestamp();
+    if (newStatus === 'completed') updates.completionTime = firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection('rides').doc(rideId).update(updates);
+    await loadDriverRidesFromFirestore();
+    await loadDashboardRides();
+    showToast('Estado actualizado', 'success');
+  } catch(e) { showToast('Error actualizando estado', ''); }
+  showLoading(false);
+}
+
+async function loadDashboardRides() {
+  if (!currentDriverId) return;
+  try {
+    const snapshot = await db.collection('rides')
+      .where('driverId', '==', currentDriverId)
+      .where('status', 'in', ['pending', 'accepted'])
+      .orderBy('scheduledTime', 'asc')
+      .limit(3)
+      .get();
+    pendingRides = []; confirmedRides = [];
+    for (const doc of snapshot.docs) {
+      const ride = { id: doc.id, ...doc.data() };
+      if (ride.passengerId) {
+        try {
+          const passengerDoc = await db.collection('users').doc(ride.passengerId).get();
+          if (passengerDoc.exists) ride.passengerName = passengerDoc.data().name || 'Pasajero';
+        } catch(e) {}
+      }
+      if (ride.status === 'pending') pendingRides.push(ride);
+      else if (ride.status === 'accepted') confirmedRides.push(ride);
+    }
+    updateDashboardRidesList();
+  } catch(e) {}
+}
+
+function updateDashboardRidesList() {
+  const container = document.getElementById('upcoming-rides-list');
+  const all = [...pendingRides, ...confirmedRides];
+  if (!all.length) { container.innerHTML = '<div class="empty-state">No hay viajes próximos</div>'; return; }
+  container.innerHTML = all.slice(0,3).map(r => `<div class="ride-card" style="padding:16px"><div style="display:flex;gap:12px"><div style="width:44px;height:44px;background:var(--primary-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--primary)">${(r.passengerName?.charAt(0) || 'P')}</div><div><div style="font-weight:700">${r.passengerName || 'Pasajero'}</div><div style="font-size:11px;color:var(--gray-500)">${r.scheduledTime?.toDate ? new Date(r.scheduledTime.toDate()).toLocaleString() : 'Pendiente'}</div></div></div><div style="margin:12px 0;padding-left:22px;border-left:2px solid var(--gray-200)"><div style="display:flex;gap:8px;margin-bottom:8px"><div style="width:8px;height:8px;background:var(--success);border-radius:50%;margin-top:5px"></div><span>${r.pickupLocation || 'Origen'}</span></div><div style="display:flex;gap:8px"><div style="width:8px;height:8px;background:var(--danger);border-radius:50%;margin-top:5px"></div><span>${r.destination || 'Destino'}</span></div></div><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:18px;font-weight:800;color:var(--primary)">$${r.price || 0}</div>${r.status === 'pending' ? `<button onclick="acceptRide('${r.id}')" style="padding:8px 20px;background:var(--primary);border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer">Aceptar</button>` : '<span style="color:green">✓ Confirmado</span>'}</div></div>`).join('');
+}
+
+async function acceptRide(id) {
+  showLoading(true);
+  await db.collection('rides').doc(id).update({ status: 'accepted', acceptedTime: firebase.firestore.FieldValue.serverTimestamp() });
+  await loadDashboardRides();
+  await loadDriverRidesFromFirestore();
+  showLoading(false);
+  showToast('Viaje aceptado', 'success');
+}
+
+// ============ RENDERIZADO DE VIAJES ============
+function formatRideDate(timestamp) {
+  if (!timestamp) return 'Fecha no disponible';
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  return `${date.getDate()}/${date.getMonth()+1} ${date.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+}
+function getEarnings(ride) { return ride.actualEarnings || ride.estimatedEarnings || 0; }
+function getStatusInfo(status) {
+  const map = {
+    pending: { label: 'Pendiente', color: '#F59E0B', bg: '#FEF3C7', icon: 'M12 8v4l3 3M12 2a10 10 0 1 0 10 10 10 10 0 0 0-10-10z' },
+    accepted: { label: 'Aceptado', color: '#007AFF', bg: '#E3F2FF', icon: 'M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z' },
+    enroute: { label: 'En camino', color: '#9333EA', bg: '#F3E8FF', icon: 'M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83' },
+    inprogress: { label: 'En curso', color: '#10B981', bg: '#D1FAE5', icon: 'M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83' },
+    completed: { label: 'Completado', color: '#6B7280', bg: '#F3F4F6', icon: 'M5 13l4 4L19 7' },
+    cancelled_by_driver: { label: 'Cancelado por ti', color: '#EF4444', bg: '#FEE2E2', icon: 'M6 18L18 6M6 6l12 12' },
+    cancelled_by_passenger: { label: 'Cancelado por pasajero', color: '#EF4444', bg: '#FEE2E2', icon: 'M6 18L18 6M6 6l12 12' }
+  };
+  return map[status] || map.pending;
+}
+function renderRideCard(ride, showActions) {
+  const statusInfo = getStatusInfo(ride.status);
+  const isActive = ['pending','accepted','enroute','inprogress'].includes(ride.status);
+  return `<div class="ride-card" onclick="showRideDetails('${ride.id}')"><div style="padding:16px"><div style="display:flex;gap:16px"><div style="width:50px;height:50px;background:${statusInfo.bg};border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="${statusInfo.color}" stroke-width="2"><path d="${statusInfo.icon}"/></svg></div><div style="flex:1"><div style="display:flex;justify-content:space-between"><div><strong>${formatRideDate(ride.scheduledTime)}</strong></div><div style="padding:4px 12px;border-radius:20px;background:${statusInfo.bg};color:${statusInfo.color};font-size:10px;font-weight:600">${statusInfo.label}</div></div><div style="color:var(--gray-500);font-size:14px;margin-top:4px">${ride.passengerName || 'Pasajero'}</div><div style="color:var(--gray-600);font-size:13px;margin-top:8px">${(ride.pickupLocation || 'Origen').split(',')[0]} → ${(ride.destination || 'Destino').split(',')[0]}</div></div></div></div><div style="border-top:1px solid var(--gray-100);padding:12px 16px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:var(--gray-500)">Tu ingreso</div><div style="font-size:18px;font-weight:bold;color:${isActive ? 'var(--primary)' : 'var(--success)'}">$${getEarnings(ride).toFixed(2)}</div></div>${showActions ? `<button onclick="event.stopPropagation();showActionMenu('${ride.id}')" style="background:${isActive ? 'var(--primary)' : 'var(--gray-200)'};border:none;padding:10px 20px;border-radius:10px;color:${isActive ? 'white' : 'var(--gray-700)'};font-weight:600;cursor:pointer">${isActive ? 'Acciones' : 'Ver'}</button>` : ''}</div></div>`;
+}
+function renderActiveRides() { const container = document.getElementById('ridesActiveTab'); if (!activeRides || activeRides.length === 0) container.innerHTML = '<div class="empty-state">No tienes viajes activos</div>'; else container.innerHTML = activeRides.map(r => renderRideCard(r, true)).join(''); document.getElementById('ridesActiveCount').innerHTML = `(${activeRides?.length || 0})`; }
+function renderCompletedRides() { const container = document.getElementById('ridesCompletedTab'); if (!completedRides || completedRides.length === 0) container.innerHTML = '<div class="empty-state">Aún no has completado viajes</div>'; else container.innerHTML = `<div class="stats-banner"><div class="stat-item"><div class="stat-value">$${totalEarnings.toFixed(2)}</div><div class="stat-label">Ganancias totales</div></div><div style="width:1px;background:rgba(255,255,255,0.3)"></div><div class="stat-item"><div class="stat-value">$${monthlyEarnings.toFixed(2)}</div><div class="stat-label">Este mes</div></div></div>` + completedRides.map(r => renderRideCard(r, false)).join(''); document.getElementById('ridesCompletedCount').innerHTML = `(${completedRides?.length || 0})`; }
+function renderCancelledRides() { const container = document.getElementById('ridesCancelledTab'); if (!cancelledRides || cancelledRides.length === 0) container.innerHTML = '<div class="empty-state">No tienes viajes cancelados</div>'; else container.innerHTML = cancelledRides.map(r => renderRideCard(r, false)).join(''); document.getElementById('ridesCancelledCount').innerHTML = `(${cancelledRides?.length || 0})`; }
+function switchRidesTab(tab) { document.querySelectorAll('.rides-tab').forEach(t => t.classList.remove('active')); document.querySelector(`.rides-tab[data-ridestab="${tab}"]`).classList.add('active'); document.getElementById('ridesActiveTab').style.display = tab === 'active' ? 'block' : 'none'; document.getElementById('ridesCompletedTab').style.display = tab === 'completed' ? 'block' : 'none'; document.getElementById('ridesCancelledTab').style.display = tab === 'cancelled' ? 'block' : 'none'; }
+function showRideDetails(rideId) { const ride = [...activeRides, ...completedRides, ...cancelledRides].find(r => r.id === rideId); if (!ride) return; const statusInfo = getStatusInfo(ride.status); const isActive = ['pending','accepted','enroute','inprogress'].includes(ride.status); const modal = document.getElementById('rideModal'); const content = document.getElementById('rideModalContent'); content.innerHTML = `<div style="margin-bottom:20px"><div style="display:flex;justify-content:space-between"><div><strong style="font-size:18px">${formatRideDate(ride.scheduledTime)}</strong></div><div style="padding:6px 14px;border-radius:20px;background:${statusInfo.bg};color:${statusInfo.color};font-size:12px;font-weight:600">${statusInfo.label}</div></div><div style="color:var(--gray-500);font-size:13px;margin-top:8px">ID: ${ride.id.slice(0,8).toUpperCase()}</div></div><div style="background:var(--gray-50);border-radius:16px;padding:16px;margin-bottom:16px"><strong>Información del Pasajero</strong><div style="display:flex;gap:16px;margin-top:12px"><div style="width:50px;height:50px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:20px">${(ride.passengerName?.charAt(0) || 'P')}</div><div><div><strong>${ride.passengerName || 'Pasajero'}</strong></div><div style="color:var(--gray-500)">${ride.passengerPhone || 'No disponible'}</div></div></div></div><div style="background:var(--gray-50);border-radius:16px;padding:16px;margin-bottom:16px"><strong>Ruta del Viaje</strong><div style="margin-top:16px"><div style="display:flex;gap:12px"><div style="width:24px;height:24px;background:#D1FAE5;border-radius:6px;display:flex;align-items:center;justify-content:center"><div style="width:8px;height:8px;background:#10B981;border-radius:50%"></div></div><div><div style="font-size:12px;color:var(--gray-500)">Recogida</div><div>${ride.pickupLocation || 'No especificada'}</div></div></div><div style="margin-left:12px;width:2px;height:20px;background:var(--gray-300);margin:6px 0 6px 12px"></div><div style="display:flex;gap:12px"><div style="width:24px;height:24px;background:#FEE2E2;border-radius:6px;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg></div><div><div style="font-size:12px;color:var(--gray-500)">Destino</div><div>${ride.destination || 'No especificado'}</div></div></div></div></div><div style="background:var(--gray-50);border-radius:16px;padding:16px;margin-bottom:16px"><strong>Información del Pago</strong><div style="display:flex;justify-content:space-between;margin-top:12px"><span style="color:var(--gray-500)">Precio:</span><span><strong>$${(ride.price || 0).toFixed(2)}</strong></span></div><div style="display:flex;justify-content:space-between;margin-top:8px"><span style="color:var(--gray-500)">Tu ingreso:</span><span><strong style="color:var(--success);font-size:18px">$${getEarnings(ride).toFixed(2)}</strong></span></div>${ride.status === 'completed' ? `<div style="margin-top:12px;padding:12px;background:#D1FAE5;border-radius:12px;text-align:center;font-size:13px;color:#10B981">✓ Pago recibido</div>` : ''}</div>${isActive ? `<button onclick="closeModal();showActionMenu('${ride.id}')" style="width:100%;padding:14px;background:var(--primary);border:none;border-radius:12px;color:white;font-weight:600;cursor:pointer">Acciones del Viaje</button>` : ''}<button onclick="closeModal()" style="width:100%;padding:12px;background:var(--gray-100);border:none;border-radius:12px;margin-top:12px;cursor:pointer">Cerrar</button>`; modal.classList.add('open'); }
+function showActionMenu(rideId) { const ride = [...activeRides, ...completedRides, ...cancelledRides].find(r => r.id === rideId); if (!ride) return; const actions = []; if (ride.status === 'pending') actions.push({ title: 'Aceptar Viaje', color: '#10B981', action: () => updateRideStatusInFirestore(rideId, 'accepted') }); if (ride.status === 'accepted') actions.push({ title: 'Iniciar Viaje', color: '#007AFF', action: () => updateRideStatusInFirestore(rideId, 'enroute') }); if (ride.status === 'enroute') actions.push({ title: 'Pasajero Recogido', color: '#10B981', action: () => updateRideStatusInFirestore(rideId, 'inprogress') }); if (ride.status === 'inprogress') actions.push({ title: 'Completar Viaje', color: '#9333EA', action: () => updateRideStatusInFirestore(rideId, 'completed') }); if (['pending','accepted','enroute','inprogress'].includes(ride.status)) actions.push({ title: 'Cancelar Viaje', color: '#EF4444', action: () => { if(confirm('¿Cancelar este viaje?')) updateRideStatusInFirestore(rideId, 'cancelled_by_driver'); } }); const modal = document.getElementById('actionModal'); const content = document.getElementById('actionModalContent'); content.innerHTML = `<div style="margin-bottom:20px;text-align:center"><strong style="font-size:18px">Acciones del Viaje</strong></div>${actions.map(a => `<div onclick="closeActionModal();updateRideStatusInFirestore('${rideId}', '${a.title === 'Aceptar Viaje' ? 'accepted' : a.title === 'Iniciar Viaje' ? 'enroute' : a.title === 'Pasajero Recogido' ? 'inprogress' : a.title === 'Completar Viaje' ? 'completed' : 'cancelled_by_driver'}')" style="background:${a.color}08;border:1px solid ${a.color}20;border-radius:16px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;cursor:pointer"><div style="width:44px;height:44px;background:${a.color}20;border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${a.color}" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></div><div><div style="font-weight:600;color:${a.color}">${a.title}</div><div style="font-size:13px;color:var(--gray-500)">${a.subtitle || ''}</div></div><div style="margin-left:auto"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${a.color}" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>`).join('')}<button onclick="closeActionModal()" style="width:100%;padding:12px;background:var(--gray-100);border:none;border-radius:12px;margin-top:8px;cursor:pointer">Cerrar</button>`; modal.classList.add('open'); }
+function closeModal() { document.getElementById('rideModal').classList.remove('open'); }
+function closeActionModal() { document.getElementById('actionModal').classList.remove('open'); }
+
+// ============ FUNCIONES PRINCIPALES ============
+async function generateQR() { const canvas=document.getElementById('qr-canvas'); if(!canvas)return; const text=`LYBE CONDUCTOR\n${driverData.name||''}\n${driverData.phone||''}\n${currentUser?.email||''}`; try{ await QRCode.toCanvas(canvas,text,{width:200}); }catch(e){} }
+function downloadQRCode() { const c=document.getElementById('qr-canvas'); if(c){ const a=document.createElement('a'); a.download='lybe_qr.png'; a.href=c.toDataURL(); a.click(); showToast('QR descargado','success'); } }
+async function signInWithGoogle() { showLoading(true); try { const result = await auth.signInWithPopup(googleProvider); const user = result.user; const docRef = db.collection('drivers').doc(user.uid); const doc = await docRef.get(); if (doc.exists && doc.data().phone) { currentUser = user; currentDriverId = user.uid; await loadAllData(); document.getElementById('auth-screen').classList.remove('active'); document.getElementById('main-screen').classList.add('active'); } else { await docRef.set({ name: user.displayName || user.email.split('@')[0], email: user.email, phone: '', licenseNumber: '', rating: 0, totalTrips: 0, profileImageUrl: user.photoURL || '' }); pendingCompleteUser = user; document.getElementById('auth-screen').classList.remove('active'); document.getElementById('complete-reg-screen').classList.add('active'); } } catch(e) { console.error(e); } showLoading(false); }
+async function completeRegistration() { const phone = document.getElementById('complete-phone').value.trim(); if (!phone) return; showLoading(true); await db.collection('drivers').doc(pendingCompleteUser.uid).update({ phone, licenseNumber: document.getElementById('complete-license').value.trim() }); currentUser = pendingCompleteUser; currentDriverId = pendingCompleteUser.uid; await loadAllData(); document.getElementById('complete-reg-screen').classList.remove('active'); document.getElementById('main-screen').classList.add('active'); showLoading(false); }
+async function signUpWithGoogle() { await signInWithGoogle(); }
+async function loadAllData() { showLoading(true); const doc = await db.collection('drivers').doc(currentDriverId).get(); driverData = doc.data() || {}; const vSnap = await db.collection('drivers').doc(currentDriverId).collection('vehicles').get(); vehicles = []; vSnap.forEach(d => vehicles.push({ id: d.id, ...d.data() })); if (!vehicles.find(v=>v.isPrimary) && vehicles.length) vehicles[0].isPrimary = true; await loadDriverRidesFromFirestore(); await loadDashboardRides(); await loadFrequentPassengers(); updateUI(); showLoading(false); }
+async function loadFrequentPassengers() { const snap = await db.collection('rides').where('driverId','==',currentDriverId).where('status','==','completed').limit(20).get(); const map = new Map(); for (const d of snap.docs) { const pid = d.data().passengerId; if (pid && !map.has(pid)) { const p = await db.collection('users').doc(pid).get(); if (p.exists) map.set(pid, { name: p.data().name || 'Pasajero', rating: p.data().rating || 0, trips: 1 }); } else if (pid && map.has(pid)) { map.get(pid).trips++; } } frequentPassengers = Array.from(map.values()).slice(0,5); }
+function updateUI() { const pv = vehicles.find(v=>v.isPrimary); document.getElementById('user-name').textContent = driverData.name?.split(' ')[0] || 'Conductor'; document.getElementById('user-vehicle').textContent = pv ? pv.model : 'Sin vehículo'; document.getElementById('user-avatar').innerHTML = driverData.profileImageUrl ? `<img src="${driverData.profileImageUrl}">` : (driverData.name?.charAt(0) || 'D'); document.getElementById('m-today').textContent = driverData.totalTrips || 0; document.getElementById('m-rating').innerHTML = (driverData.rating || 0) > 0 ? `${driverData.rating}` : 'Nuevo'; document.getElementById('m-earnings').textContent = `$${(driverData.totalTrips || 0) * 25}`; document.getElementById('menu-name').textContent = driverData.name || 'Conductor'; document.getElementById('menu-code').textContent = `Código: ${currentDriverId?.slice(-8) || 'XXXXXX'}`; document.getElementById('menu-avatar').innerHTML = driverData.profileImageUrl ? `<img src="${driverData.profileImageUrl}" style="width:100%;height:100%;object-fit:cover">` : (driverData.name?.charAt(0) || 'D'); updateFrequentPassengers(); updateVehiclesList(); renderProfileView(); generateQR(); }
+function updateFrequentPassengers() { const c = document.getElementById('frequent-passengers-list'); if (!frequentPassengers.length) { c.innerHTML = '<div class="empty-state">Sin pasajeros frecuentes</div>'; return; } c.innerHTML = frequentPassengers.map(p => `<div class="passenger-card"><div class="passenger-avatar">${p.name?.charAt(0)||'P'}</div><div class="passenger-name">${p.name}</div><div class="passenger-rating">⭐ ${p.rating.toFixed(1)}</div><div class="passenger-trips">${p.trips} viajes</div></div>`).join(''); }
+function updateVehiclesList() { const c = document.getElementById('vehicles-list'); if (!c) return; if (!vehicles.length) { c.innerHTML = '<div class="empty-state">No tienes vehículos registrados</div>'; return; } c.innerHTML = vehicles.map(v => `<div class="vehicle-card ${v.isPrimary?'primary':''}"><div class="vehicle-header"><div class="vehicle-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="12" rx="2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg></div><div class="vehicle-info"><div class="vehicle-name">${v.model} ${v.year}${v.isPrimary?' <span style="background:#007AFF;color:white;padding:2px 8px;border-radius:12px;font-size:10px;">Principal</span>':''}</div><div class="vehicle-plate">${v.plate} · ${v.color}</div></div></div><div class="vehicle-actions"><button class="btn-small" onclick="setPrimaryVehicle('${v.id}')">Principal</button><button class="btn-small danger" onclick="deleteVehicle('${v.id}')">Eliminar</button></div></div>`).join(''); }
+async function setPrimaryVehicle(id) { showLoading(true); const ref = db.collection('drivers').doc(currentDriverId).collection('vehicles'); const all = await ref.get(); for (const d of all.docs) await ref.doc(d.id).update({ isPrimary: false }); await ref.doc(id).update({ isPrimary: true }); await loadAllData(); showLoading(false); showToast('Actualizado','success'); }
+async function deleteVehicle(id) { if(confirm('¿Eliminar?')){ showLoading(true); await db.collection('drivers').doc(currentDriverId).collection('vehicles').doc(id).delete(); await loadAllData(); showLoading(false); showToast('Eliminado',''); } }
+async function saveVehicle() { const model=document.getElementById('vehicle-model').value.trim(); if(!model) return; showLoading(true); const ref=db.collection('drivers').doc(currentDriverId).collection('vehicles'); const isPrimary=document.getElementById('vehicle-primary').checked; if(isPrimary){ const all=await ref.get(); for(const d of all.docs) await ref.doc(d.id).update({isPrimary:false}); } await ref.add({ model, year:parseInt(document.getElementById('vehicle-year').value)||2023, color:document.getElementById('vehicle-color').value.trim()||'Negro', plate:document.getElementById('vehicle-plate').value.trim().toUpperCase()||'NEW', capacity:4, isPrimary:isPrimary||!vehicles.length }); await loadAllData(); closeVehicleModal(); showLoading(false); showToast('Vehículo agregado','success'); }
+function openAddVehicleModal() { document.getElementById('vehicle-modal').classList.add('open'); }
+function closeVehicleModal() { document.getElementById('vehicle-modal').classList.remove('open'); }
+function renderProfileView() { const container = document.getElementById('profile-content'); if(!container)return; const isAvailable = driverData.isAvailable || false; const joinDate = driverData.createdAt ? new Date(driverData.createdAt.toDate()).toLocaleDateString() : 'Recién registrado'; const licenseVerified = driverData.licenseNumber && driverData.licenseNumber.length > 5; container.innerHTML = `<div class="profile-container"><div class="profile-card"><div class="profile-avatar-large" onclick="triggerProfileImageUpload()">${driverData.profileImageUrl ? `<img src="${driverData.profileImageUrl}">` : (driverData.name?.charAt(0) || 'D')}</div><div class="profile-name-large">${driverData.name || 'Conductor'}</div><div class="profile-code-badge">${currentDriverId?.slice(-8) || 'DRV-XXXX'}</div><div class="profile-join-date">Se unió: ${joinDate}</div><div class="profile-status-badge ${isAvailable ? 'online' : 'offline'}"><span class="status-dot-small ${isAvailable ? 'online' : 'offline'}"></span> ${isAvailable ? 'Disponible' : 'No disponible'}</div></div><div class="stats-grid"><div class="stat-card" onclick="showToast('Calificación: ${driverData.rating || 0}','')"><div class="stat-icon" style="background:#FEF3C7"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div class="stat-value" style="color:#F59E0B">${(driverData.rating || 0).toFixed(1)}</div><div class="stat-label">Calificación</div></div><div class="stat-card" onclick="showToast('Viajes: ${driverData.totalTrips || 0}','')"><div class="stat-icon" style="background:#E3F2FF"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="1.5"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div><div class="stat-value" style="color:#007AFF">${driverData.totalTrips || 0}</div><div class="stat-label">Viajes</div></div><div class="stat-card" onclick="showToast('Ganancias: $${(driverData.totalTrips||0)*25}','')"><div class="stat-icon" style="background:#D1FAE5"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="stat-value" style="color:#10B981">$${(driverData.totalTrips||0)*25}</div><div class="stat-label">Ganancias</div></div><div class="stat-card" onclick="showToast('Licencia: ${licenseVerified ? 'Verificada' : 'Pendiente'}','')"><div class="stat-icon" style="background:${licenseVerified ? '#D1FAE5' : '#FEE2E2'}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${licenseVerified ? '#10B981' : '#EF4444'}" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="stat-value" style="color:${licenseVerified ? '#10B981' : '#EF4444'}">${licenseVerified ? 'Verificada' : 'Pendiente'}</div><div class="stat-label">Licencia</div></div></div><div class="info-section"><div class="info-section-title"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Información Personal</div><div class="info-row-custom"><div class="info-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="info-content"><div class="info-label-small">Nombre</div><div class="info-value-text">${driverData.name || 'No especificado'}</div></div></div><div class="info-row-custom"><div class="info-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.574 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div><div class="info-content"><div class="info-label-small">Teléfono</div><div class="info-value-text">${driverData.phone || 'No especificado'}</div></div></div><div class="info-row-custom"><div class="info-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg></div><div class="info-content"><div class="info-label-small">Email</div><div class="info-value-text">${currentUser?.email || ''}</div></div></div><div class="info-row-custom"><div class="info-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M8 8h8M8 12h6"/></svg></div><div class="info-content"><div class="info-label-small">Suscripción</div><div class="info-value-text"><span class="info-badge inactive">BÁSICO</span></div></div></div><button class="profile-edit-btn" onclick="openEditProfileModal()">Editar perfil</button></div><div class="info-section"><div class="info-section-title"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M20 12H4M12 4v16"/></svg> Información del Conductor</div><div class="info-row-custom"><div class="info-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div><div class="info-content"><div class="info-label-small">Código</div><div class="info-value-text">${currentDriverId?.slice(-8) || 'DRV-XXXX'}</div></div></div><div class="info-row-custom"><div class="info-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div><div class="info-content"><div class="info-label-small">Miembro desde</div><div class="info-value-text">${joinDate}</div></div></div></div></div><input type="file" id="profile-image-input" accept="image/*" style="display:none" onchange="handleProfileImageUpload(this)">`; }
+function openEditProfileModal() { document.getElementById('edit-name').value=driverData.name||''; document.getElementById('edit-phone').value=driverData.phone||''; document.getElementById('edit-license').value=driverData.licenseNumber||''; document.getElementById('edit-profile-modal').classList.add('open'); }
+function closeEditProfileModal() { document.getElementById('edit-profile-modal').classList.remove('open'); }
+async function saveProfileChanges() { showLoading(true); driverData.name=document.getElementById('edit-name').value; driverData.phone=document.getElementById('edit-phone').value; driverData.licenseNumber=document.getElementById('edit-license').value; await db.collection('drivers').doc(currentDriverId).update({ name:driverData.name, phone:driverData.phone, licenseNumber:driverData.licenseNumber }); updateUI(); closeEditProfileModal(); showLoading(false); showToast('Perfil actualizado','success'); }
+function triggerProfileImageUpload() { document.getElementById('profile-image-input').click(); }
+async function handleProfileImageUpload(input) { if(input.files && input.files[0]){ showLoading(true); const file=input.files[0]; const ref=storage.ref().child(`drivers/${currentDriverId}/profile.jpg`); await ref.put(file); const url=await ref.getDownloadURL(); driverData.profileImageUrl=url; await db.collection('drivers').doc(currentDriverId).update({ profileImageUrl:url }); updateUI(); showLoading(false); showToast('Foto actualizada','success'); } }
+function toggleAvailability() { const toggle = document.getElementById('avail-toggle'); const sw = document.getElementById('availability-switch'); const dot = document.getElementById('status-dot'); const text = document.getElementById('status-text'); const isAvailable = !toggle.classList.contains('available'); if(isAvailable){ toggle.classList.add('available'); if(sw) sw.classList.add('active'); dot.className='status-dot online'; text.textContent='Disponible para viajes'; document.getElementById('avail-text').textContent='En línea'; driverData.isAvailable = true; } else { toggle.classList.remove('available'); if(sw) sw.classList.remove('active'); dot.className='status-dot offline'; text.textContent='No disponible'; document.getElementById('avail-text').textContent='Offline'; driverData.isAvailable = false; } showToast(isAvailable?'Ahora estás en línea':'Ahora estás offline','success'); }
+function goToMenuProfile() { setPage(2); showMenuSubview('profile'); }
+let currentPage = 0;
+function setPage(index) { 
+  currentPage = index; 
+  const pages = ['dashboard','trips','menu']; 
+  const topbar = document.getElementById('dashboardTopbar');
+  if (topbar) topbar.style.display = index === 0 ? 'block' : 'none';
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); 
+  document.getElementById('page-'+pages[index]).classList.add('active'); 
+  document.querySelectorAll('.nav-item').forEach((n,i)=>n.classList.toggle('active',i===index)); 
+  if(index!==2) showMenuSubview('main'); 
+  if(index===1) { renderActiveRides(); renderCompletedRides(); renderCancelledRides(); } 
+}
+function showMenuSubview(view) { const main=document.getElementById('menu-main'); const prof=document.getElementById('menu-profile'); const veh=document.getElementById('menu-vehicles'); const qr=document.getElementById('menu-qr'); if(main) main.style.display='none'; if(prof) prof.style.display='none'; if(veh) veh.style.display='none'; if(qr) qr.style.display='none'; if(view==='main' && main) main.style.display='block'; if(view==='profile' && prof) { prof.style.display='block'; renderProfileView(); } if(view==='vehicles' && veh) { veh.style.display='block'; updateVehiclesList(); } if(view==='qr' && qr) { qr.style.display='block'; generateQR(); } }
+function switchTab(tab) { document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register'))); document.getElementById('tab-login').style.display=tab==='login'?'block':'none'; document.getElementById('tab-register').style.display=tab==='register'?'block':'none'; }
+async function doLogin() { const e=document.getElementById('login-email').value, p=document.getElementById('login-pass').value; if(!e||!p) return; showLoading(true); try{ await auth.signInWithEmailAndPassword(e,p); } catch(err){ showLoading(false); showToast(err.message,''); } }
+async function doRegister() { const n=document.getElementById('reg-name').value, e=document.getElementById('reg-email').value, ph=document.getElementById('reg-phone').value, p=document.getElementById('reg-pass').value; if(!n||!e||!p) return; showLoading(true); try{ const cred=await auth.createUserWithEmailAndPassword(e,p); await db.collection('drivers').doc(cred.user.uid).set({ name:n, email:e, phone:ph, licenseNumber:'', rating:0, totalTrips:0 }); } catch(err){ showLoading(false); showToast(err.message,''); } }
+function doLogout() { auth.signOut(); location.reload(); }
+auth.onAuthStateChanged(async (user) => {
+  if(user){ const doc=await db.collection('drivers').doc(user.uid).get(); if(doc.exists && doc.data().phone){ currentUser=user; currentDriverId=user.uid; await loadAllData(); document.getElementById('auth-screen').classList.remove('active'); document.getElementById('main-screen').classList.add('active'); setPage(0); } else if(doc.exists){ pendingCompleteUser=user; document.getElementById('auth-screen').classList.remove('active'); document.getElementById('complete-reg-screen').classList.add('active'); } } else { document.getElementById('auth-screen').classList.add('active'); document.getElementById('main-screen').classList.remove('active'); document.getElementById('complete-reg-screen').classList.remove('active'); } document.getElementById('page-loader').style.display='none'; });
+</script>
+</body>
+</html>
