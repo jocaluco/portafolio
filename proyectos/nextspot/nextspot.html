@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Parking App - Next Spot | Encuentra estacionamiento</title>
+    <title>Parking App - Next Spot | Estacionamiento en calle</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -56,7 +56,6 @@
         .btn-danger { background: #EF4444; }
         .btn-success { background: #10B981; }
         .btn-secondary { background: #6B7280; }
-        .btn-edit { background: #F59E0B; }
         .timer-box { background: #1F2937; color: white; border-radius: 40px; padding: 8px 20px; font-family: monospace; font-size: 28px; font-weight: bold; display: inline-block; }
         .small-avatar { width: 65px; height: 65px; border-radius: 50%; background: linear-gradient(135deg, #ACC2E8, #8BA5D4); display: flex; align-items: center; justify-content: center; border: 2px solid #10B981; }
         .small-avatar i { font-size: 32px; color: white; }
@@ -128,7 +127,6 @@
         <button id="requestLocationBtn" style="margin-top: 12px; background: #3B82F6; color: white; border: none; padding: 8px 20px; border-radius: 40px; font-family: 'Poppins', sans-serif; cursor: pointer; display: none;">Activar ubicación</button>
     </div>
 
-    <!-- Header -->
     <div class="app-header">
         <button class="menu-btn" id="menuBtn"><i class="fas fa-bars"></i></button>
         <div class="points-container">
@@ -137,7 +135,6 @@
         </div>
     </div>
 
-    <!-- Drawer -->
     <div id="drawerOverlay" class="drawer-overlay"></div>
     <div id="drawer" class="drawer">
         <div class="profile-row">
@@ -153,7 +150,6 @@
         <div class="drawer-item drawer-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Salir</div>
     </div>
 
-    <!-- Tarjetas flotantes -->
     <div id="waitingCard" class="waiting-card hidden">
         <div class="flex-between">
             <strong><i class="fas fa-hourglass-half"></i> Buscando conductor...</strong>
@@ -178,9 +174,8 @@
             <i class="fas fa-car"></i>
             <span id="parkedVehicle">Tesla Model S</span>
         </div>
-        <button class="btn btn-edit" id="editParkingBtn" style="background: #F59E0B;">✏️ Editar ubicación</button>
         <button class="btn btn-danger" id="leaveSpotBtn">🚗 Me voy - Liberar espacio</button>
-        <p class="text-muted" style="text-align: center; margin-top: 8px;">💡 Arrastra el marcador para ajustar la ubicación exacta</p>
+        <p class="text-muted" style="text-align: center; margin-top: 8px;">💡 Mantén presionado en el mapa para ajustar la ubicación</p>
     </div>
 
     <div id="takenCard" class="taken-card hidden">
@@ -200,7 +195,6 @@
         <button class="btn btn-success" id="completeParkingBtn">✅ Completar estacionamiento</button>
     </div>
 
-    <!-- Tarjeta de oferta seleccionada desde el mapa (SIN LISTA DE OFERTAS) -->
     <div id="selectedOfferCard" class="selected-offer-card hidden">
         <div class="flex-between">
             <strong><i class="fas fa-parking" style="color:#10B981;"></i> Estacionamiento disponible</strong>
@@ -232,9 +226,7 @@
         <p class="text-muted" style="text-align: center; margin-top: 12px;">Tienes 5 minutos para llegar</p>
     </div>
 
-    <div id="dragInstruction" class="drag-instruction hidden"><i class="fas fa-arrows-alt"></i> Arrastra el marcador para ajustar la ubicación</div>
-
-    <!-- NO HAY LISTA DE OFERTAS - Solo marcadores en el mapa -->
+    <div id="dragInstruction" class="drag-instruction hidden"><i class="fas fa-fingerprint"></i> Mantén presionado en el mapa para ajustar la ubicación</div>
 
     <!-- Botones flotantes -->
     <div id="onlineBadge" class="online-badge hidden"><i class="fas fa-circle" style="font-size: 8px; margin-right: 6px;"></i> Buscando estacionamientos...</div>
@@ -273,8 +265,8 @@
     
     // ========== ICONO DE CARRO ==========
     const parkedCarIcon = L.divIcon({
-        html: `<div style="animation: pulse 1.5s infinite;"><svg viewBox="0 0 100 100" width="50" height="50"><rect x="20" y="35" width="60" height="25" rx="8" fill="#10B981" stroke="#059669" stroke-width="2"/><rect x="30" y="28" width="40" height="12" rx="4" fill="#34D399" stroke="#059669" stroke-width="1.5"/><circle cx="35" cy="62" r="8" fill="#1F2937" stroke="#374151" stroke-width="2"/><circle cx="65" cy="62" r="8" fill="#1F2937" stroke="#374151" stroke-width="2"/><circle cx="35" cy="62" r="3" fill="#9CA3AF"/><circle cx="65" cy="62" r="3" fill="#9CA3AF"/><rect x="45" y="42" width="10" height="8" rx="2" fill="#059669"/></svg></div>`,
-        iconSize: [50, 50],
+        html: `<div style="animation: pulse 1.5s infinite;"><svg viewBox="0 0 100 100" width="45" height="45"><rect x="20" y="35" width="60" height="25" rx="8" fill="#10B981" stroke="#059669" stroke-width="2"/><rect x="30" y="28" width="40" height="12" rx="4" fill="#34D399" stroke="#059669" stroke-width="1.5"/><circle cx="35" cy="62" r="8" fill="#1F2937" stroke="#374151" stroke-width="2"/><circle cx="65" cy="62" r="8" fill="#1F2937" stroke="#374151" stroke-width="2"/><circle cx="35" cy="62" r="3" fill="#9CA3AF"/><circle cx="65" cy="62" r="3" fill="#9CA3AF"/><rect x="45" y="42" width="10" height="8" rx="2" fill="#059669"/></svg></div>`,
+        iconSize: [45, 45],
         className: 'parked-car-marker'
     });
     
@@ -296,6 +288,43 @@
     let map, userMarker, parkingMarker = null, currentPosition = null, currentAddress = "Obteniendo dirección...";
     let locationReceived = false, locationCallbacks = [], locationRequested = false, parkingMarkers = [];
     
+    // ========== FUNCIÓN PARA SNAP TO STREET (ajustar a la calle más cercana) ==========
+    // Esta función toma coordenadas y las ajusta a la calle más cercana
+    // usando puntos de referencia de calles en el Bronx
+    function snapToStreet(lat, lng) {
+        // Calles de referencia en el Bronx con sus coordenadas aproximadas en la calle
+        const streetPoints = [
+            { lat: 40.8550, lng: -73.8650, name: "Wallace Ave" },      // 2160 Wallace Ave
+            { lat: 40.8545, lng: -73.8655, name: "Wallace Ave" },      // Wallace Ave más al sur
+            { lat: 40.8555, lng: -73.8645, name: "Wallace Ave" },      // Wallace Ave más al norte
+            { lat: 40.8300, lng: -73.8800, name: "Westchester Ave" },   // 1500 Westchester Ave
+            { lat: 40.8125, lng: -73.9050, name: "E 149th St" },        // 800 E 149th St
+            { lat: 40.8610, lng: -73.8978, name: "Fordham Plaza" },     // 1 Fordham Plaza
+            { lat: 40.8670, lng: -73.8960, name: "E Kingsbridge Rd" },  // 35 E Kingsbridge Rd
+            { lat: 40.8670, lng: -73.8320, name: "Baychester Ave" }      // 100 Baychester Ave
+        ];
+        
+        // Encontrar el punto de calle más cercano
+        let closest = streetPoints[0];
+        let minDist = calcularDistancia(lat, lng, closest.lat, closest.lng);
+        
+        for (let i = 1; i < streetPoints.length; i++) {
+            const dist = calcularDistancia(lat, lng, streetPoints[i].lat, streetPoints[i].lng);
+            if (dist < minDist) {
+                minDist = dist;
+                closest = streetPoints[i];
+            }
+        }
+        
+        // Si estamos cerca de un punto de calle conocido, usarlo
+        if (minDist < 0.05) { // menos de 50 metros
+            return { lat: closest.lat, lng: closest.lng, snapped: true };
+        }
+        
+        // Si no, devolver las coordenadas originales
+        return { lat: lat, lng: lng, snapped: false };
+    }
+    
     // ========== FUNCIONES ==========
     function calcularDistancia(lat1, lon1, lat2, lon2) {
         const R = 6371;
@@ -307,7 +336,6 @@
     }
     
     function actualizarDistancias() { if(!currentPosition) return; availableSpots.forEach(spot => { spot.distance = calcularDistancia(currentPosition.lat, currentPosition.lng, spot.location.lat, spot.location.lng); }); }
-    function ordenarOfertasPorDistancia() { return [...availableSpots].filter(spot => spot.status === "available" && new Date(spot.offerExpiresAt) > new Date()).sort((a, b) => (a.distance || Infinity) - (b.distance || Infinity)); }
     function formatearDistancia(d) { if(d === null) return "Calculando..."; return d < 1 ? `${Math.round(d * 1000)} m` : `${d.toFixed(1)} km`; }
     
     // ========== ONDA EXPANSIVA ==========
@@ -331,7 +359,6 @@
         });
     }
     
-    // Mostrar tarjeta de oferta seleccionada (desde marcador)
     function showSelectedOfferCard(spot) {
         const minsLeft = Math.max(0, Math.floor((new Date(spot.offerExpiresAt) - new Date()) / 60000));
         const distanceText = formatearDistancia(spot.distance);
@@ -344,7 +371,6 @@
             <button class="btn" id="acceptSelectedOfferBtn">✅ Aceptar estacionamiento</button>
         `;
         document.getElementById("selectedOfferCard").classList.remove("hidden");
-        
         document.getElementById("acceptSelectedOfferBtn")?.addEventListener("click", () => {
             acceptOffer(spot);
             document.getElementById("selectedOfferCard").classList.add("hidden");
@@ -353,7 +379,6 @@
     
     function closeSelectedOfferCard() { document.getElementById("selectedOfferCard").classList.add("hidden"); }
     
-    // ========== FUNCIÓN PARA ABRIR WAZE ==========
     function openWaze(address, lat, lng) {
         const encodedAddress = encodeURIComponent(address);
         if(lat && lng) {
@@ -401,9 +426,17 @@
         if(!currentAcceptedOffer) return;
         if(navigator.vibrate) navigator.vibrate(50);
         if(offerTimerInterval) clearInterval(offerTimerInterval);
-        currentUser.isParked = true; currentUser.isOnline = false; currentUser.parkedLocation = currentAcceptedOffer.location; currentUser.parkedAddress = currentAcceptedOffer.address;
-        addParkingMarker(currentAcceptedOffer.location.lat, currentAcceptedOffer.location.lng, currentAcceptedOffer.address);
+        
+        // Ajustar ubicación a la calle más cercana
+        const snapped = snapToStreet(currentAcceptedOffer.location.lat, currentAcceptedOffer.location.lng);
+        
+        currentUser.isParked = true; currentUser.isOnline = false; 
+        currentUser.parkedLocation = { lat: snapped.lat, lng: snapped.lng }; 
+        currentUser.parkedAddress = currentAcceptedOffer.address;
+        
+        addParkingMarker(snapped.lat, snapped.lng, currentAcceptedOffer.address);
         saveParkingToLocal();
+        
         const spotIndex = availableSpots.findIndex(s => s.id === currentAcceptedOffer.id);
         if(spotIndex !== -1) availableSpots.splice(spotIndex, 1);
         document.getElementById("parkedVehicle").innerText = getVehicleName();
@@ -421,17 +454,77 @@
         updateUI(); showToast("Oferta cancelada");
     }
     
-    // ========== ESTACIONAMIENTO CON MARCADOR DRAGGEABLE ==========
+    // ========== ESTACIONAMIENTO CON MARCADOR EDITABLE (mantener presionado) ==========
     function addParkingMarker(lat, lng, address) {
         if(parkingMarker) map.removeLayer(parkingMarker);
-        parkingMarker = L.marker([lat, lng], { icon: parkedCarIcon, draggable: true }).addTo(map);
-        parkingMarker.bindTooltip('🚗 Tu vehículo está aquí - Arrástralo para ajustar', { permanent: false, direction: 'top' });
-        parkingMarker.on('dragstart', () => { document.getElementById("dragInstruction").classList.remove("hidden"); setTimeout(() => document.getElementById("dragInstruction").classList.add("hidden"), 3000); });
-        parkingMarker.on('dragend', (e) => { const newPos = e.target.getLatLng(); currentUser.parkedLocation = { lat: newPos.lat, lng: newPos.lng }; obtenerDireccion(newPos.lat, newPos.lng, (direccion) => { currentUser.parkedAddress = direccion; document.getElementById("parkedAddress").innerText = direccion; showToast("📍 Ubicación actualizada"); saveParkingToLocal(); }); document.getElementById("dragInstruction").classList.add("hidden"); });
+        
+        parkingMarker = L.marker([lat, lng], { icon: parkedCarIcon }).addTo(map);
+        parkingMarker.bindTooltip('🚗 Tu vehículo está aquí - Mantén presionado para mover', { permanent: false, direction: 'top' });
+        
+        // Evento de mantener presionado (long press) para editar ubicación
+        let pressTimer = null;
+        
+        parkingMarker.on('mousedown', function(e) {
+            pressTimer = setTimeout(() => {
+                // Long press detected - activar modo edición
+                parkingMarker.dragging.enable();
+                parkingMarker.openTooltip();
+                showToast("📍 Arrastra el marcador a la ubicación exacta en la calle");
+                document.getElementById("dragInstruction").classList.remove("hidden");
+                
+                // Instrucción de cómo finalizar
+                parkingMarker.once('dragend', function(e) {
+                    const newPos = e.target.getLatLng();
+                    const snapped = snapToStreet(newPos.lat, newPos.lng);
+                    parkingMarker.setLatLng([snapped.lat, snapped.lng]);
+                    currentUser.parkedLocation = { lat: snapped.lat, lng: snapped.lng };
+                    obtenerDireccion(snapped.lat, snapped.lng, (direccion) => {
+                        currentUser.parkedAddress = direccion;
+                        document.getElementById("parkedAddress").innerText = direccion;
+                        showToast("📍 Ubicación actualizada: " + direccion.substring(0, 40));
+                        saveParkingToLocal();
+                    });
+                    parkingMarker.dragging.disable();
+                    document.getElementById("dragInstruction").classList.add("hidden");
+                });
+            }, 500);
+        });
+        
+        parkingMarker.on('mouseup', function() {
+            clearTimeout(pressTimer);
+        });
+        
+        // Para dispositivos táctiles
+        parkingMarker.on('touchstart', function(e) {
+            pressTimer = setTimeout(() => {
+                parkingMarker.dragging.enable();
+                parkingMarker.openTooltip();
+                showToast("📍 Arrastra el marcador a la ubicación exacta en la calle");
+                document.getElementById("dragInstruction").classList.remove("hidden");
+                
+                parkingMarker.once('dragend', function(e) {
+                    const newPos = e.target.getLatLng();
+                    const snapped = snapToStreet(newPos.lat, newPos.lng);
+                    parkingMarker.setLatLng([snapped.lat, snapped.lng]);
+                    currentUser.parkedLocation = { lat: snapped.lat, lng: snapped.lng };
+                    obtenerDireccion(snapped.lat, snapped.lng, (direccion) => {
+                        currentUser.parkedAddress = direccion;
+                        document.getElementById("parkedAddress").innerText = direccion;
+                        showToast("📍 Ubicación actualizada: " + direccion.substring(0, 40));
+                        saveParkingToLocal();
+                    });
+                    parkingMarker.dragging.disable();
+                    document.getElementById("dragInstruction").classList.add("hidden");
+                });
+            }, 500);
+        });
+        
+        parkingMarker.on('touchend', function() {
+            clearTimeout(pressTimer);
+        });
+        
         map.setView([lat, lng], 17);
     }
-    
-    function editParkingLocation() { if(parkingMarker && parkingMarker.dragging) { parkingMarker.dragging.enable(); parkingMarker.openTooltip(); showToast("📍 Arrastra el marcador a la ubicación exacta"); document.getElementById("dragInstruction").classList.remove("hidden"); setTimeout(() => { if(parkingMarker && parkingMarker.dragging) parkingMarker.dragging.disable(); document.getElementById("dragInstruction").classList.add("hidden"); }, 10000); } }
     
     // ========== PERSISTENCIA LOCAL ==========
     function saveParkingToLocal() { if(currentUser.isParked && currentUser.parkedLocation) { localStorage.setItem("saved_parking", JSON.stringify({ location: currentUser.parkedLocation, address: currentUser.parkedAddress, timestamp: new Date().toISOString(), vehicle: currentUser.currentVehicle })); } else { localStorage.removeItem("saved_parking"); } }
@@ -453,7 +546,16 @@
         if(loadingText) loadingText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Solicitando permiso...';
         if(navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                (pos) => { currentPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude }; map.setView([currentPosition.lat, currentPosition.lng], 15); userMarker.setLatLng([currentPosition.lat, currentPosition.lng]); obtenerDireccion(currentPosition.lat, currentPosition.lng, (direccion) => { currentAddress = direccion; if(loadingDiv) loadingDiv.style.display = "none"; showToast(`📍 Ubicación detectada`); }); locationReceived = true; locationCallbacks.forEach(cb => cb(currentPosition)); locationCallbacks = []; },
+                (pos) => { 
+                    currentPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude }; 
+                    // Ajustar a la calle más cercana
+                    const snapped = snapToStreet(currentPosition.lat, currentPosition.lng);
+                    currentPosition = snapped;
+                    map.setView([currentPosition.lat, currentPosition.lng], 16); 
+                    userMarker.setLatLng([currentPosition.lat, currentPosition.lng]); 
+                    obtenerDireccion(currentPosition.lat, currentPosition.lng, (direccion) => { currentAddress = direccion; if(loadingDiv) loadingDiv.style.display = "none"; showToast(`📍 Ubicación en calle: ${currentAddress.substring(0, 40)}`); }); 
+                    locationReceived = true; locationCallbacks.forEach(cb => cb(currentPosition)); locationCallbacks = []; 
+                },
                 (error) => { let errorMsg = "No se pudo obtener tu ubicación."; if(error.code === 1) errorMsg = "Permiso denegado. Activa la ubicación."; if(loadingText) loadingText.innerHTML = `⚠️ ${errorMsg}`; if(requestBtn) requestBtn.style.display = "block"; currentPosition = { lat: BRONX_CENTER.lat, lng: BRONX_CENTER.lng }; currentAddress = "Bronx, NY (Demo)"; map.setView([currentPosition.lat, currentPosition.lng], 13); userMarker.setLatLng([currentPosition.lat, currentPosition.lng]); locationReceived = true; },
                 { enableHighAccuracy: true, timeout: 15000 }
             );
@@ -488,14 +590,22 @@
         if(currentAcceptedOffer) { showToast("Ya tienes una oferta aceptada"); return; }
         if(!locationReceived) { showToast("Esperando tu ubicación..."); return; }
         if(navigator.vibrate) navigator.vibrate(50);
-        currentUser.isParked = true; currentUser.isOnline = false; currentUser.isWaiting = false; currentUser.parkedLocation = { lat: currentPosition.lat, lng: currentPosition.lng }; currentUser.parkedAddress = currentAddress;
-        addParkingMarker(currentPosition.lat, currentPosition.lng, currentAddress);
+        
+        // Ajustar a la calle más cercana
+        const snapped = snapToStreet(currentPosition.lat, currentPosition.lng);
+        
+        currentUser.isParked = true; currentUser.isOnline = false; currentUser.isWaiting = false; 
+        currentUser.parkedLocation = { lat: snapped.lat, lng: snapped.lng }; 
+        currentUser.parkedAddress = currentAddress;
+        
+        addParkingMarker(snapped.lat, snapped.lng, currentAddress);
         saveParkingToLocal();
+        
         document.getElementById("parkedAddress").innerText = currentAddress;
         document.getElementById("parkedVehicle").innerText = getVehicleName();
         document.getElementById("parkedCard").classList.remove("hidden");
         updateUI();
-        showToast("✅ Vehículo estacionado correctamente");
+        showToast("✅ Vehículo estacionado en la calle");
     }
     
     function leaveSpot() {
@@ -594,7 +704,6 @@
     document.getElementById("powerBtn").onclick = toggleOnline;
     document.getElementById("myLocationBtn").onclick = centerOnUser;
     document.getElementById("leaveSpotBtn").onclick = leaveSpot;
-    document.getElementById("editParkingBtn").onclick = editParkingLocation;
     document.getElementById("closeParkedCard").onclick = deleteParkingOnClose;
     document.getElementById("closeWaitingCard").onclick = cancelWaitingOffer;
     document.getElementById("cancelWaitingBtn").onclick = cancelWaitingOffer;
