@@ -164,9 +164,13 @@ body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(
 .scan-container { display: flex; flex-direction: column; align-items: center; padding: 20px 0; }
 .qr-frame { width: 260px; height: 260px; background: #000; border-radius: 24px; border: 2px solid var(--primary); position: relative; overflow: hidden; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
 #qr-reader { width: 100%; height: 100%; object-fit: cover; }
+.qr-scan-line { position: absolute; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--primary), transparent); animation: scan 2s linear infinite; }
+@keyframes scan { 0% { top: 10%; } 100% { top: 90%; } }
 .qr-hint { font-size: 13px; color: var(--gray-500); text-align: center; margin-bottom: 20px; }
 .driver-found-card { background: var(--white); border-radius: var(--radius-lg); padding: 20px; width: 100%; border: 1px solid var(--success); margin-bottom: 16px; animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.scan-overlay-message { position: fixed; bottom: 120px; left: 20px; right: 20px; background: var(--gray-800); color: white; padding: 12px 20px; border-radius: 30px; text-align: center; font-size: 13px; z-index: 100; animation: slideUp 0.3s ease; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Add by Code Section */
 .add-code-section { width: 100%; margin-top: 20px; border-top: 1px solid var(--gray-200); padding-top: 20px; }
@@ -501,6 +505,8 @@ let chatUnsubscribe = null;
 let nextRide = null;
 let html5QrCode = null;
 let pendingGoogleUser = null;
+let isScanningActive = false;
+let qrProcessed = false;
 
 function showToast(msg, type) { const t=document.getElementById('toast'); t.textContent=msg; t.className='toast '+(type||'')+' show'; setTimeout(()=>t.className='toast',2500); }
 function showLoading(show) { document.getElementById('loadingOverlay').classList.toggle('show', show); }
@@ -580,7 +586,10 @@ async function completeRegistration() {
 
 function closeCompleteModal() { document.getElementById('completeModal').classList.remove('open'); pendingGoogleUser = null; auth.signOut(); }
 function doLogout() { 
-  if(html5QrCode) { html5QrCode.stop().catch(e=>console.log); }
+  if(html5QrCode && isScanningActive) { 
+    try { html5QrCode.stop(); } catch(e) {} 
+    isScanningActive = false;
+  }
   auth.signOut(); 
   location.reload(); 
 }
@@ -653,37 +662,69 @@ async function startScanner() {
   const startBtn = document.getElementById('startScanBtn');
   const scanResultDiv = document.getElementById('scanResult');
   
-  if(html5QrCode) {
-    try { await html5QrCode.stop(); } catch(e) {}
-    html5QrCode = null;
-    startBtn.textContent = 'Start Camera';
-    scanResultDiv.innerHTML = '';
+  if(isScanningActive && html5QrCode) {
+    try { 
+      await html5QrCode.stop(); 
+      isScanningActive = false;
+      html5QrCode = null;
+      startBtn.textContent = 'Start Camera';
+      scanResultDiv.innerHTML = '';
+      showToast('Camera stopped', '');
+    } catch(e) { console.log(e); }
     return;
   }
   
   try {
+    qrProcessed = false;
     html5QrCode = new Html5Qrcode("qr-reader");
     const config = { fps: 10, qrbox: { width: 200, height: 200 } };
     
     await html5QrCode.start({ facingMode: "environment" }, config, async (decodedText) => {
-      // QR detected - process the driver ID
+      // Only process if we haven't processed a QR yet
+      if(qrProcessed) return;
+      qrProcessed = true;
+      
       console.log('QR Code detected:', decodedText);
-      await processScannedDriver(decodedText);
+      
+      // Show feedback to user
+      showToast('Driver found! Processing...', 'success');
+      
+      // Process and save driver immediately
+      await processAndSaveScannedDriver(decodedText);
+      
+      // Automatic stop scanner after processing
+      setTimeout(async () => {
+        if(isScanningActive && html5QrCode) {
+          try { 
+            await html5QrCode.stop(); 
+            isScanningActive = false;
+            html5QrCode = null;
+            document.getElementById('startScanBtn').textContent = 'Start Camera';
+            showToast('Driver saved! Camera stopped', 'success');
+          } catch(e) { console.log(e); }
+        }
+      }, 1000);
+      
     }, (error) => {
-      // Silent error handling
+      // Silent error handling - ignore
     });
     
+    isScanningActive = true;
     startBtn.textContent = 'Stop Camera';
     showToast('Camera active - scanning for QR codes...', '');
   } catch(e) {
     console.error('Camera error:', e);
     showToast('Cannot access camera or QR scanner failed', 'error');
     startBtn.textContent = 'Start Camera';
+    isScanningActive = false;
   }
 }
 
-async function processScannedDriver(qrData) {
-  if(!currentUser || !userData) return;
+async function processAndSaveScannedDriver(qrData) {
+  if(!currentUser || !userData) {
+    showToast('Please login first', 'error');
+    return;
+  }
   if(!qrData) return;
   
   showLoading(true);
@@ -706,6 +747,8 @@ async function processScannedDriver(qrData) {
     if(!driverDoc.exists) {
       scanResultDiv.innerHTML = `<div class="driver-found-card"><div style="color:var(--danger)">❌ Invalid QR code. Driver not found.</div></div>`;
       showToast('Invalid QR code', 'error');
+      showLoading(false);
+      qrProcessed = false;
       return;
     }
     
@@ -713,59 +756,36 @@ async function processScannedDriver(qrData) {
     
     if(driverId === currentUser.uid) {
       scanResultDiv.innerHTML = `<div class="driver-found-card"><div style="color:var(--danger)">❌ You cannot add yourself as a driver.</div></div>`;
+      showToast('You cannot add yourself', 'error');
       showLoading(false);
+      qrProcessed = false;
       return;
     }
     
     // Check if already saved
     const isAlreadySaved = savedDrivers.some(d => d.id === driverId);
     
-    scanResultDiv.innerHTML = `<div class="driver-found-card">
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
-        <div class="driver-avatar" style="width:52px;height:52px;font-size:22px">${(driverData.name||'D').charAt(0)}</div>
-        <div>
-          <div style="font-weight:700;font-size:18px">${driverData.name || 'Driver'}</div>
-          <div style="font-size:13px;color:var(--gray-500)">${driverData.vehicleModel || ''} · ${driverData.licensePlate || ''}</div>
-          <div style="font-size:13px;color:var(--warning)">⭐ ${driverData.rating || 'New'} · ${driverData.totalTrips || 0} trips</div>
+    if(isAlreadySaved) {
+      scanResultDiv.innerHTML = `<div class="driver-found-card">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
+          <div class="driver-avatar" style="width:52px;height:52px;font-size:22px">${(driverData.name||'D').charAt(0)}</div>
+          <div>
+            <div style="font-weight:700;font-size:18px">${driverData.name || 'Driver'}</div>
+            <div style="font-size:13px;color:var(--gray-500)">${driverData.vehicleModel || ''} · ${driverData.licensePlate || ''}</div>
+          </div>
         </div>
-      </div>
-      ${isAlreadySaved ? '<div style="color:var(--success);font-size:14px">✓ Driver already saved</div>' : '<button class="btn-primary" onclick="saveScannedDriver(\'' + driverId + '\')">Save Driver</button>'}
-    </div>`;
-    
-    if(!isAlreadySaved) {
-      showToast(`Driver ${driverData.name} found! Click Save to add`, 'success');
-    } else {
+        <div style="color:var(--success);font-size:14px">✓ Driver already saved</div>
+      </div>`;
       showToast(`${driverData.name} is already in your drivers list`, '');
-    }
-    
-  } catch(e) {
-    console.error('Error processing QR:', e);
-    scanResultDiv.innerHTML = `<div class="driver-found-card"><div style="color:var(--danger)">❌ Error processing QR code</div></div>`;
-    showToast('Error processing QR code', 'error');
-  }
-  showLoading(false);
-}
-
-async function saveScannedDriver(driverId) {
-  showLoading(true);
-  try {
-    const driverDoc = await db.collection('drivers').doc(driverId).get();
-    if(!driverDoc.exists) {
-      showToast('Driver not found', 'error');
       showLoading(false);
+      qrProcessed = false;
       return;
     }
     
-    const driverData = driverDoc.data();
+    // SAVE DRIVER AUTOMATICALLY
     const pasRef = db.collection('passengers').doc(currentUser.uid);
     const pasDoc = await pasRef.get();
     const current = pasDoc.data()?.savedDrivers || [];
-    
-    if(current.includes(driverId)) {
-      showToast('Driver already saved', '');
-      showLoading(false);
-      return;
-    }
     
     await pasRef.update({ savedDrivers: [...current, driverId] });
     await db.collection('drivers').doc(driverId).collection('clients').doc(currentUser.uid).set({
@@ -779,24 +799,25 @@ async function saveScannedDriver(driverId) {
     });
     
     await loadSavedDrivers();
-    showToast(`${driverData.name || 'Driver'} saved successfully!`, 'success');
     
-    // Update the scan result to show saved
-    const scanResultDiv = document.getElementById('scanResult');
     scanResultDiv.innerHTML = `<div class="driver-found-card">
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
         <div class="driver-avatar" style="width:52px;height:52px;font-size:22px">${(driverData.name||'D').charAt(0)}</div>
         <div>
           <div style="font-weight:700;font-size:18px">${driverData.name || 'Driver'}</div>
           <div style="font-size:13px;color:var(--gray-500)">${driverData.vehicleModel || ''} · ${driverData.licensePlate || ''}</div>
+          <div style="font-size:13px;color:var(--warning)">⭐ ${driverData.rating || 'New'} · ${driverData.totalTrips || 0} trips</div>
         </div>
       </div>
-      <div style="color:var(--success);font-size:14px">✓ Driver saved successfully!</div>
+      <div style="color:var(--success);font-size:14px;text-align:center;padding:12px;background:var(--success-light);border-radius:12px;">✓ Driver saved successfully! Camera will now stop.</div>
     </div>`;
     
+    showToast(`${driverData.name || 'Driver'} saved successfully!`, 'success');
+    
   } catch(e) {
-    console.error(e);
-    showToast('Error saving driver', 'error');
+    console.error('Error processing QR:', e);
+    scanResultDiv.innerHTML = `<div class="driver-found-card"><div style="color:var(--danger)">❌ Error processing QR code: ${e.message}</div></div>`;
+    showToast('Error processing QR code', 'error');
   }
   showLoading(false);
 }
@@ -1095,6 +1116,13 @@ function timeAgo(date) {
 
 // ============ NAVIGATION ============
 function showPage(page) {
+  // Stop scanner when leaving scan page
+  if(page !== 'scan' && isScanningActive && html5QrCode) {
+    try { html5QrCode.stop(); isScanningActive = false; } catch(e) {}
+    const startBtn = document.getElementById('startScanBtn');
+    if(startBtn) startBtn.textContent = 'Start Camera';
+  }
+  
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const targetPage = document.getElementById(`page-${page}`);
   if(targetPage) targetPage.classList.add('active');
@@ -1103,6 +1131,9 @@ function showPage(page) {
     if(pages[i] === page) n.classList.add('active');
     else if(pages[i] !== page && n.classList.contains('active')) n.classList.remove('active');
   });
+  if(page === 'scan') {
+    qrProcessed = false;
+  }
   if(page === 'drivers') renderSavedDrivers();
   if(page === 'schedule') renderDriverSelect();
   if(page === 'profile') updateProfileUI();
