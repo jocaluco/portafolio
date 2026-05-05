@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Cotización Gratis | 4Legacy Insurance Agency</title>
+
+<!-- Favicons con versión para forzar actualización -->
+<link rel="icon" type="image/x-icon" href="/assets/favicon.ico?v=4">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=4">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=4">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=4">
+<link rel="manifest" href="/assets/site.webmanifest?v=4">
+<link rel="prefetch" href="/assets/favicon.ico?v=4">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,700;1,800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init('lLxEmfWEdD9-O4vPw');</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0B2D6B;--sky:#0B2D6B;--sky-light:#e8f4fd;--sky-pale:#f0f8ff;
+  --white:#fff;--g50:#f8fafc;--g100:#f1f5f9;--g200:#e2e8f0;
+  --g400:#94a3b8;--g600:#64748b;--g900:#0f172a;--gold:#D4AF37;--gold-light:#F5E6B3;--gold-dark:#B8860B;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Poppins',sans-serif;background:var(--g50);color:var(--g900);min-height:100vh;overflow-x:hidden}
+
+/* ── NAV ── */
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 64px;
+  background: rgba(255,255,255,.98);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--g200);
+  box-shadow: 0 2px 16px rgba(11,45,107,.06);
+}
+@media(min-width:768px){
+  nav {
+    padding: 0 64px;
+    height: 70px;
+  }
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+.nav-logo img {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+}
+.nav-logo-text {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* En móvil ocultar la imagen del logo */
+@media(max-width: 767px){
+  .nav-logo img {
+    display: none;
+  }
+  .nav-logo-text {
+    font-size: 20px;
+    letter-spacing: 0.5px;
+  }
+}
+
+@media(min-width: 768px){
+  .nav-logo img {
+    display: block;
+    height: 52px;
+  }
+  .nav-logo-text {
+    font-size: 18px;
+    letter-spacing: 1.5px;
+  }
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+@media(min-width: 768px){
+  .nav-right {
+    gap: 20px;
+  }
+}
+
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.lang-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: var(--g400);
+  font-family: 'Poppins', sans-serif;
+  transition: color .2s;
+}
+@media(min-width: 768px){
+  .lang-btn {
+    font-size: 13px;
+  }
+}
+.lang-btn.active {
+  color: var(--navy);
+}
+.lang-btn:hover {
+  color: var(--navy);
+}
+.lang-sep {
+  font-size: 11px;
+  color: var(--g200);
+}
+
+/* Ocultar botón de menú en todas las pantallas */
+.menu-btn {
+  display: none;
+}
+.mobile-menu {
+  display: none !important;
+}
+.n
+.lang-switch{display:flex;align-items:center;gap:4px}
+.lang-btn{font-size:12px;font-weight:600;padding:0;border:none;cursor:pointer;background:transparent;color:var(--g400);font-family:'Poppins',sans-serif;transition:color .2s}
+@media(min-width:768px){
+  .lang-btn{font-size:13px}
+}
+.lang-btn.active{color:var(--navy)}
+.lang-btn:hover{color:var(--navy)}
+.lang-sep{font-size:11px;color:var(--g200)}
+
+/* Ocultar botón de menú en todas las pantallas */
+.menu-btn{display:none}
+.mobile-menu{display:none!important}
+
+/* ── LAYOUT ── */
+.page{padding-top:64px;min-height:100vh;width:100%;margin:0;padding-left:0;padding-right:0}
+@media(min-width:768px){
+  .page{padding-top:70px;max-width:900px;margin:0 auto;padding-left:24px;padding-right:24px}
+}
+
+/* ── WIZARD AREA ── */
+.wizard-area{display:flex;flex-direction:column;padding:16px 12px 32px}
+@media(min-width:768px){
+  .wizard-area{padding:40px 0}
+}
+.wiz-card{background:var(--white);border-radius:16px;border:1px solid var(--g200);box-shadow:0 2px 12px rgba(11,45,107,.04);overflow:hidden}
+@media(min-width:768px){
+  .wiz-card{border-radius:20px;box-shadow:0 4px 32px rgba(11,45,107,.06)}
+}
+.wiz-prog{height:4px;background:var(--g100)}
+.wiz-prog-fill{height:100%;background:var(--gold);transition:width .4s ease}
+.wiz-head{padding:20px 16px 0}
+@media(min-width:768px){
+  .wiz-head{padding:32px 36px 0}
+}
+.wiz-step-lbl{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+@media(min-width:768px){
+  .wiz-step-lbl{font-size:11px;margin-bottom:6px}
+}
+.wiz-title{font-size:18px;font-weight:800;font-style:italic;color:var(--navy);line-height:1.2}
+@media(min-width:768px){
+  .wiz-title{font-size:22px}
+}
+.wiz-body{padding:20px 16px 24px}
+@media(min-width:768px){
+  .wiz-body{padding:28px 36px 36px}
+}
+
+/* OPTS */
+.opt-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:4px}
+@media(min-width:480px){
+  .opt-grid{grid-template-columns:repeat(3,1fr);gap:12px}
+}
+.opt{border:1.5px solid var(--g200);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s,transform .15s;user-select:none}
+@media(min-width:768px){
+  .opt{padding:18px 14px;border-radius:14px}
+}
+.opt:hover{border-color:var(--gold);background:var(--gold-light);transform:translateY(-2px)}
+.opt.selected{border-color:var(--gold);background:var(--gold-light)}
+.opt-icon{font-size:24px;margin-bottom:6px}
+@media(min-width:768px){
+  .opt-icon{font-size:28px;margin-bottom:8px}
+}
+.opt-label{font-size:12px;font-weight:600;color:var(--navy)}
+@media(min-width:768px){
+  .opt-label{font-size:13px}
+}
+.opt-sub{font-size:10px;color:var(--g400);margin-top:2px;line-height:1.3}
+@media(min-width:768px){
+  .opt-sub{font-size:11px;margin-top:3px}
+}
+
+/* FIELDS */
+.wf-group{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+@media(min-width:768px){
+  .wf-group{gap:6px;margin-bottom:14px}
+}
+.wf-group label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--navy)}
+@media(min-width:768px){
+  .wf-group label{font-size:11px;letter-spacing:.8px}
+}
+.wf-group input,.wf-group select{font-family:'Poppins',sans-serif;font-size:13px;color:var(--g900);background:var(--white);border:1.5px solid var(--g200);border-radius:8px;padding:10px 12px;outline:none;width:100%;transition:border-color .2s,box-shadow .2s}
+@media(min-width:768px){
+  .wf-group input,.wf-group select{font-size:14px;border-radius:9px;padding:11px 14px}
+}
+.wf-group input:focus,.wf-group select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.1)}
+.wf-group input::placeholder{color:var(--g400);font-size:12px}
+.wf-group select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+@media(min-width:768px){
+  .wf-group select{background-position:right 14px center;padding-right:36px}
+}
+.wf-row{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:480px){
+  .wf-row{grid-template-columns:1fr 1fr;gap:14px}
+}
+.upsell-grid{display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0}
+@media(min-width:480px){
+  .upsell-grid{grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+}
+.upsell-card{border:1.5px solid var(--g200);border-radius:10px;padding:12px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:border-color .2s,background .2s}
+@media(min-width:768px){
+  .upsell-card{padding:14px;gap:12px;border-radius:12px}
+}
+.upsell-card:hover,.upsell-card.on{border-color:var(--gold);background:var(--gold-light)}
+.upsell-card input[type=checkbox]{accent-color:var(--gold);width:16px;height:16px;flex-shrink:0;margin-top:2px;cursor:pointer}
+.upsell-card-text .u-title{font-size:12px;font-weight:600;color:var(--navy)}
+@media(min-width:768px){
+  .upsell-card-text .u-title{font-size:13px}
+}
+.upsell-card-text .u-desc{font-size:10px;color:var(--g400);margin-top:2px;line-height:1.3}
+@media(min-width:768px){
+  .upsell-card-text .u-desc{font-size:11px}
+}
+
+/* NAV BUTTONS */
+.wiz-nav{display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid var(--g100)}
+@media(min-width:768px){
+  .wiz-nav{margin-top:28px;padding-top:24px}
+}
+.wiz-back{background:none;border:1.5px solid var(--g200);color:var(--g600);padding:9px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:border-color .2s,color .2s}
+@media(min-width:768px){
+  .wiz-back{padding:11px 22px;font-size:13px}
+}
+.wiz-back:hover{border-color:var(--gold);color:var(--gold)}
+.wiz-next{background:var(--navy);color:var(--white);padding:10px 20px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:background .2s,transform .15s;display:flex;align-items:center;gap:6px}
+@media(min-width:768px){
+  .wiz-next{padding:13px 32px;font-size:14px;gap:8px}
+}
+.wiz-next:hover{background:var(--gold);color:var(--navy);transform:translateY(-1px)}
+.step-count{font-size:11px;color:var(--g400);font-weight:500}
+@media(min-width:768px){
+  .step-count{font-size:12px}
+}
+
+/* VALIDATION */
+.wf-group input.err,.wf-group select.err{border-color:#e24b4a!important;box-shadow:0 0 0 3px rgba(226,75,74,.1)!important}
+.field-err{font-size:10px;color:#e24b4a;margin-top:4px;font-weight:600;display:flex;align-items:center;gap:4px}
+@media(min-width:768px){
+  .field-err{font-size:11px;margin-top:5px;gap:5px}
+}
+.field-err::before{content:'!';width:13px;height:13px;border-radius:50%;background:#e24b4a;color:white;font-size:8px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+@media(min-width:768px){
+  .field-err::before{width:15px;height:15px;font-size:9px}
+}
+.req{color:#e24b4a;margin-left:1px}
+.opts-err{font-size:11px;color:#e24b4a;margin-top:10px;font-weight:600;display:flex;align-items:center;gap:5px}
+@media(min-width:768px){
+  .opts-err{font-size:12px}
+}
+.opts-err::before{content:'!';width:15px;height:15px;border-radius:50%;background:#e24b4a;color:white;font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* SUCCESS */
+.wiz-success{text-align:center;padding:12px 0 4px}
+@media(min-width:768px){
+  .wiz-success{padding:16px 0 8px}
+}
+.wiz-success-icon{width:60px;height:60px;border-radius:50%;background:var(--gold-light);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px}
+@media(min-width:768px){
+  .wiz-success-icon{width:80px;height:80px;margin:0 auto 20px;font-size:36px}
+}
+.wiz-success h2{font-size:20px;font-weight:800;font-style:italic;color:var(--navy);margin-bottom:8px;line-height:1.2}
+@media(min-width:768px){
+  .wiz-success h2{font-size:26px;margin-bottom:10px}
+}
+.wiz-success p{font-size:12px;font-weight:300;color:var(--g600);line-height:1.5;max-width:100%;margin:0 auto 8px}
+@media(min-width:768px){
+  .wiz-success p{font-size:14px;line-height:1.75;max-width:460px;margin:0 auto 10px}
+}
+.wiz-success .phone-big{font-size:18px;font-weight:800;color:var(--gold);margin:12px 0;display:block;text-decoration:none}
+@media(min-width:768px){
+  .wiz-success .phone-big{font-size:22px;margin:14px 0}
+}
+.summary-box{background:var(--g50);border:1px solid var(--g200);border-radius:12px;padding:16px;margin:16px 0;text-align:left}
+@media(min-width:768px){
+  .summary-box{padding:20px 24px;margin:20px 0;border-radius:14px}
+}
+.summary-box h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:10px}
+@media(min-width:768px){
+  .summary-box h4{font-size:11px;letter-spacing:1.5px;margin-bottom:12px}
+}
+.summary-row{display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-bottom:1px solid var(--g100)}
+@media(min-width:768px){
+  .summary-row{font-size:13px;padding:6px 0}
+}
+.summary-row:last-child{border-bottom:none}
+.summary-row .key{color:var(--g600)}
+.summary-row .val{color:var(--navy);font-weight:600}
+.btn-home{display:inline-block;margin-top:6px;background:var(--navy);color:var(--white);padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;transition:background .2s}
+@media(min-width:768px){
+  .btn-home{margin-top:8px;padding:13px 28px;font-size:14px}
+}
+.btn-home:hover{background:var(--gold);color:var(--navy)}
+
+/* ── FOOTER ── */
+footer{background:var(--navy);padding:40px 20px 20px;margin-top:40px}
+@media(min-width:768px){
+  footer{padding:56px 80px 28px}
+}
+.ft-logo-mobile{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;margin-bottom:30px}
+@media(min-width:768px){
+  .ft-logo-mobile{display:none}
+}
+.ft-logo-mobile img{height:130px;width:auto;object-fit:contain;margin-bottom:12px}
+.ft-logo-mobile .ft-logo-text-mobile{font-size:18px;font-weight:800;color:var(--white);letter-spacing:1.5px;font-family:'Poppins',sans-serif}
+.ft-grid{display:grid;grid-template-columns:1fr;gap:36px;padding-bottom:44px;border-bottom:1px solid rgba(255,255,255,.07)}
+@media(min-width:768px){
+  .ft-grid{grid-template-columns:1.5fr 1fr 1fr 1fr}
+}
+.ft-logo-desktop{display:none}
+@media(min-width:768px){
+  .ft-logo-desktop{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+}
+.ft-logo-desktop img{height:52px;width:auto;object-fit:contain}
+.ft-logo-desktop .ft-logo-text{font-size:18px;font-weight:800;color:var(--white);letter-spacing:1.5px;font-family:'Poppins',sans-serif}
+.ft-col h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:14px;font-family:'Poppins',sans-serif}
+@media(max-width:767px){
+  .ft-col h4{text-align:center}
+}
+.ft-col ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+@media(max-width:767px){
+  .ft-col ul{align-items:center}
+}
+.ft-col ul li a{font-size:13px;font-weight:300;color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s;font-family:'Poppins',sans-serif}
+.ft-col ul li a:hover{color:var(--gold)}
+.ft-bottom{display:flex;flex-direction:column;gap:6px;padding-top:22px}
+@media(min-width:768px){
+  .ft-bottom{flex-direction:row;justify-content:space-between;align-items:center}
+}
+@media(max-width:767px){
+  .ft-bottom{align-items:center;text-align:center}
+}
+.ft-copy{font-size:11px;color:rgba(255,255,255,.28);font-family:'Poppins',sans-serif}
+.ft-copy a{color:rgba(255,255,255,.55);text-decoration:none;transition:color .2s}
+.ft-copy a:hover{color:var(--gold)}
+.ft-legal-links{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:14px}
+.ft-legal-links button{font-size:11px;color:rgba(255,255,255,.45);background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;text-decoration:underline;text-underline-offset:2px;transition:color .2s;padding:0}
+.ft-legal-links button:hover{color:var(--gold)}
+.ft-license{font-size:11px;color:rgba(255,255,255,.28);font-family:'Poppins',sans-serif;text-align:center;margin-top:8px;line-height:1.6}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:translateY(0)}
+
+/* LEGAL MODALS */
+.legal-overlay{position:fixed;inset:0;z-index:998;background:rgba(11,45,107,.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
+.legal-overlay.open{display:flex}
+.legal-modal{background:var(--white);border-radius:20px;width:100%;max-width:760px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(11,45,107,.25)}
+.legal-modal-header{padding:24px 28px 18px;border-bottom:1px solid var(--g200);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-shrink:0}
+.legal-modal-header h2{font-size:20px;font-weight:800;font-style:italic;color:var(--navy);line-height:1.2;font-family:'Poppins',sans-serif}
+.legal-close{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--g200);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--g400);transition:background .2s;flex-shrink:0}
+.legal-close:hover{background:var(--gold-light);color:var(--gold)}
+.legal-modal-body{overflow-y:auto;padding:24px 28px 32px;flex:1}
+.legal-modal-body h3{font-size:14px;font-weight:700;color:var(--navy);margin:20px 0 6px;font-family:'Poppins',sans-serif}
+.legal-modal-body h3:first-child{margin-top:0}
+.legal-modal-body p,.legal-modal-body li{font-size:13px;font-weight:300;color:var(--g600);line-height:1.8;font-family:'Poppins',sans-serif}
+.legal-modal-body ul{padding-left:18px;margin:6px 0 12px;display:flex;flex-direction:column;gap:4px}
+.legal-modal-footer{padding:16px 28px;border-top:1px solid var(--g200);flex-shrink:0;text-align:center}
+.legal-modal-footer p{font-size:12px;color:var(--g400);font-family:'Poppins',sans-serif;margin-top:4px}
+.legal-modal-footer strong{color:var(--navy)}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a href="index.html" class="nav-logo">
+    <img src="assets/logo.png" alt="4Legacy Insurance Agency"/>
+    <span class="nav-logo-text">4 LEGACY INSURANCE AGENCY</span>
+  </a>
+  <div class="nav-right">
+    <div class="lang-switch">
+      <button class="lang-btn" id="btn-es" onclick="setLang('es')">ES</button>
+      <span class="lang-sep">/</span>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="wizard-area">
+    <div class="wiz-card">
+      <div class="wiz-prog"><div class="wiz-prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="wiz-head" id="wiz-head">
+        <div>
+          <div class="wiz-step-lbl" id="step-label">Paso 1</div>
+          <div class="wiz-title" id="step-title">¿En qué podemos ayudarte?</div>
+        </div>
+      </div>
+      <div class="wiz-body" id="wiz-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="ft-logo-mobile">
+    <img src="assets/logo.png" alt="4 Legacy Insurance Agency"/>
+    <div class="ft-logo-text-mobile">4 LEGACY INSURANCE AGENCY</div>
+  </div>
+  <div class="ft-grid">
+    <div class="ft-logo-desktop">
+      <img src="assets/logo.png" alt="4 Legacy Insurance Agency"/>
+      <div class="ft-logo-text">4 LEGACY INSURANCE AGENCY</div>
+    </div>
+    <div class="ft-col"><h4>Servicios</h4><ul>
+      <li><a href="index.html#services" onclick="openQuote('auto');return false" id="ft-auto">Seguro de Auto</a></li>
+      <li><a href="index.html#services" onclick="openQuote('home');return false" id="ft-home">Seguro de Hogar</a></li>
+      <li><a href="index.html#services" onclick="openQuote('life');return false" id="ft-life">Seguro de Vida & Salud</a></li>
+      <li><a href="index.html#services" onclick="openQuote('renters');return false" id="ft-health">Seguro de Renters</a></li>
+    </ul></div>
+    <div class="ft-col"><h4 id="txt-ft-company">Compañía</h4><ul>
+      <li><a href="index.html#about" id="txt-ft-about">Quiénes Somos</a></li>
+      <li><a href="index.html#testimonials" id="txt-ft-reviews">Reseñas</a></li>
+      <li><a href="cotizacion.html" id="txt-ft-quote">Obtener Cotización</a></li>
+    </ul></div>
+    <div class="ft-col"><h4>Contacto</h4><ul>
+      <li><a href="tel:4077475813">407-747-5813</a></li>
+      <li><a href="/cdn-cgi/l/email-protection#2d59414a484e4c5646415c5a5d4e414c4a6d4a404c4441034e4240"><span class="__cf_email__" data-cfemail="3440585157554151564b4d5a59565b5d74535d515c5b1a575b59">[email&#160;protected]</span></a></li>
+      <li><a href="https://www.4legacyinsurance.com" target="_blank">www.4legacyinsurance.com</a></li>
+      <li><a href="#" id="txt-ft-hours">Lun–Sáb · 9am–6pm</a></li>
+    </ul></div>
+  </div>
+  <div class="ft-bottom">
+    <div class="ft-copy" id="txt-ft-copy">© 2025 4 Legacy Insurance Agency · Todos los derechos reservados.</div>
+    <div class="ft-copy">www.4legacyinsurance.com</div>
+    <div class="ft-copy">Diseñado y desarrollado por <a href="https://jocalu.xyz" target="_blank">Jocalu</a></div>
+  </div>
+  <div class="ft-legal-links">
+    <button onclick="openLegal('disclaimer')" id="btn-legal-disclaimer">Disclaimer</button>
+    <span style="color:rgba(255,255,255,.15);font-size:10px">|</span>
+    <button onclick="openLegal('privacy')" id="btn-legal-privacy">Política de Privacidad</button>
+    <span style="color:rgba(255,255,255,.15);font-size:10px">|</span>
+    <button onclick="openLegal('terms')" id="btn-legal-terms">Términos de Uso</button>
+  </div>
+  <div class="ft-license" id="txt-ft-license">Florida Agency License No. L135271 · Location No. 436922<br>4 Legacy Insurance Agency LLC no es una aseguradora. La cobertura está sujeta a aprobación de suscripción.</div>
+</footer>
+
+<!-- LEGAL MODALS -->
+<div id="legal-overlay" class="legal-overlay" onclick="legalOverlayClick(event)">
+  <div class="legal-modal">
+    <div class="legal-modal-header">
+      <h2 id="legal-modal-title">Disclaimer</h2>
+      <button class="legal-close" onclick="closeLegal()">✕</button>
+    </div>
+    <div class="legal-modal-body" id="legal-modal-body"></div>
+    <div class="legal-modal-footer">
+      <p><strong>4 Legacy Insurance Agency LLC</strong> · 100 Broadway Ave, Kissimmee, FL 34741</p>
+      <p><strong>407-747-5813</strong> · Respejo@4legacyinsurance.com · www.4legacyinsurance.com</p>
+      <p id="legal-modal-eff"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══ LEGAL MODALS ══ */
+const LEGAL = {
+  es: {
+    disclaimer: { title: 'Aviso Legal (Disclaimer)', eff: 'Fecha de vigencia: 24 de marzo de 2026', body: `<h3>1. Naturaleza de este Sitio Web</h3><p>www.4legacyinsurance.com es operado por 4 Legacy Insurance Agency LLC, una agencia de seguros licenciada en el Estado de Florida (Licencia No. L135271). Este sitio está destinado únicamente a proporcionar información general sobre productos de seguros y permitir a los consumidores enviar solicitudes de cotización.</p><p>Este sitio no proporciona cotizaciones, no vincula coberturas, no emite pólizas ni constituye una oferta de venta de seguros. Todas las cotizaciones y términos de póliza son proporcionados exclusivamente por agentes licenciados.</p><h3>2. Información de Licencia</h3><p>4 Legacy Insurance Agency LLC está licenciada por el Departamento de Servicios Financieros de Florida conforme a la Sección 626.0428 de los Estatutos de Florida. La licencia no constituye un aval o garantía de ningún producto o servicio de seguro.</p><h3>3. Solicitudes de Cotización</h3><p>Al enviar un formulario de cotización, usted acepta que: (1) está enviando una solicitud de información únicamente; (2) el envío no garantiza que se proporcionará una cotización ni que se ofrecerá cobertura; (3) un agente licenciado se comunicará con usted por teléfono, correo o mensaje de texto; (4) las tarifas dependen de suscripción, elegibilidad, ubicación, historial de manejo, perfil de crédito y otros factores; (5) las tarifas mostradas son ilustrativas y pueden no reflejar precios en tiempo real.</p><h3>4. Sin Garantía de Cobertura o Ahorros</h3><p>Los ahorros y tarifas mostrados varían según factores individuales. Cualquier ejemplo de tarifa es ilustrativo y puede no representar resultados típicos o garantizados.</p><h3>5. Aseguradoras de Terceros</h3><p>4 Legacy Insurance Agency LLC trabaja con múltiples compañías de seguros. La disponibilidad de productos puede variar. La agencia no representa a todos los aseguradores del mercado.</p><h3>6. Comunicaciones</h3><p>Al enviar su información de contacto, usted consiente ser contactado por un agente licenciado por teléfono, correo o mensaje de texto. Puede optar por no participar en cualquier momento contactándonos directamente.</p><h3>7. Exactitud de la Información</h3><p>4 Legacy Insurance Agency LLC no hace representaciones o garantías sobre la integridad o exactitud de ningún contenido en este sitio. Las leyes, regulaciones y disponibilidad de productos están sujetos a cambios.</p>` },
+    privacy: { title: 'Política de Privacidad', eff: 'Fecha de vigencia: 24 de marzo de 2026', body: `<h3>1. Introducción</h3><p>4 Legacy Insurance Agency LLC está comprometida a proteger la privacidad de quienes visitan www.4legacyinsurance.com y envían información a través de nuestros formularios de cotización.</p><h3>2. Información que Recopilamos</h3><p>Cuando envía un formulario de cotización podemos recopilar: nombre completo, número de teléfono, correo electrónico, código ZIP, horario de contacto preferido e información de seguros que proporcione voluntariamente. No recopilamos información de pago, números de Seguro Social ni identificaciones del gobierno.</p><h3>3. Cómo Usamos su Información</h3><p>Usamos su información únicamente para responder a su consulta, preparar una cotización personalizada, contactarle sobre su solicitud, y cumplir con obligaciones legales. No vendemos, alquilamos ni compartimos su información con terceros con fines de marketing.</p><h3>4. Compartir Información</h3><p>Su información es utilizada exclusivamente por los agentes licenciados de 4 Legacy Insurance Agency LLC. No compartimos su información con agregadores, otras agencias, anunciantes ni empresas de análisis. Solo la divulgamos si lo requiere la ley o una autoridad gubernamental.</p><h3>5. Seguridad de los Datos</h3><p>Tomamos medidas técnicas y administrativas razonables para proteger su información. Los formularios se transmiten a través de canales cifrados. Sin embargo, ningún método de transmisión por Internet es 100% seguro.</p><h3>6. Retención de Datos</h3><p>La información de cotizaciones que no resulte en una póliza puede retenerse hasta 12 meses para seguimiento, después se elimina de forma segura.</p><h3>7. Consentimiento de Comunicaciones (TCPA)</h3><p>Al enviar su número de teléfono, consiente recibir llamadas y mensajes de texto de 4 Legacy Insurance Agency LLC, incluyendo llamadas mediante sistemas automáticos o mensajes pregrabados. El consentimiento no es condición de compra. Puede cancelar respondiendo STOP, llamando al 407-747-5813, o escribiendo a Respejo@4legacyinsurance.com.</p><h3>8. Privacidad de Menores</h3><p>Nuestro sitio no está dirigido a menores de 18 años. No recopilamos información de menores de forma consciente. Si cree que un menor envió información, contáctenos de inmediato.</p><h3>9. Derechos de Privacidad de Florida</h3><p>Los residentes de Florida pueden solicitar la eliminación de su información de nuestros registros contactándonos directamente.</p><h3>10. Cambios a esta Política</h3><p>Podemos actualizar esta Política ocasionalmente. Cualquier cambio se publicará en esta página con una nueva fecha de vigencia.</p>` },
+    terms: { title: 'Términos de Uso', eff: 'Fecha de vigencia: 24 de marzo de 2026', body: `<h3>1. Aceptación de los Términos</h3><p>Al acceder o usar www.4legacyinsurance.com (el "Sitio"), usted acepta estar sujeto a estos Términos de Uso. Si no está de acuerdo, no use el Sitio. 4 Legacy Insurance Agency LLC puede modificar estos Términos en cualquier momento; el uso continuado constituye aceptación.</p><h3>2. Descripción de los Servicios</h3><p>El Sitio es operado por 4 Legacy Insurance Agency LLC, una agencia de seguros licenciada en Florida. El Sitio proporciona información general sobre seguros y permite enviar solicitudes de cotización. No vende, vincula ni emite pólizas directamente. Todas las transacciones son manejadas por agentes licenciados.</p><h3>3. Elegibilidad</h3><p>Debe tener al menos 18 años para usar este Sitio. Al enviar un formulario, declara que la información proporcionada es precisa, completa y actual.</p><h3>4. Formularios de Cotización</h3><p>El envío de un formulario no constituye una solicitud de seguro ni crea una obligación contractual. La recepción de su información no garantiza que se ofrecerá cobertura ni ninguna tarifa en particular.</p><h3>5. Sin Asesoramiento de Seguros</h3><p>La información en este Sitio es solo para fines informativos generales y no constituye asesoramiento de seguros ni legal. Consulte con un agente licenciado para determinar la cobertura adecuada.</p><h3>6. Propiedad Intelectual</h3><p>Todo el contenido de este Sitio es propiedad de 4 Legacy Insurance Agency LLC y está protegido por las leyes de propiedad intelectual. No puede reproducirlo sin permiso escrito expreso.</p><h3>7. Usos Prohibidos</h3><p>Usted acepta no usar el Sitio para enviar información falsa o fraudulenta, violar leyes aplicables, intentar acceso no autorizado a sus sistemas, transmitir contenido dañino, o usar bots para recopilar información.</p><h3>8. Limitación de Responsabilidad</h3><p>En la máxima medida permitida por ley, 4 Legacy Insurance Agency LLC no será responsable por daños indirectos o consecuentes. Nuestra responsabilidad total no excederá $100.</p><h3>9. Descargo de Garantías</h3><p>El Sitio y su contenido se proporcionan "tal cual" sin garantías de ningún tipo, expresas o implícitas.</p><h3>10. Ley Aplicable</h3><p>Estos Términos se rigen por las leyes del Estado de Florida. Cualquier disputa se resolverá en los tribunales del Condado de Osceola, Florida.</p>` }
+  },
+  en: {
+    disclaimer: { title: 'Website Disclaimer', eff: 'Effective Date: March 24, 2026', body: `<h3>1. Nature of This Website</h3><p>www.4legacyinsurance.com is operated by 4 Legacy Insurance Agency LLC, a licensed insurance agency in Florida (License No. L135271). This website is intended solely to provide general information about insurance products and allow consumers to submit quote requests. It does not provide quotes, bind coverage, issue policies, or constitute an offer to sell insurance.</p><h3>2. License Information</h3><p>4 Legacy Insurance Agency LLC is licensed by the Florida Department of Financial Services pursuant to Section 626.0428, Florida Statutes. Licensure does not constitute an endorsement or guarantee of any insurance product or service.</p><h3>3. Quote Requests</h3><p>By submitting a quote request form, you agree that: (1) you are submitting a request for information only; (2) submission does not guarantee a quote or coverage offer; (3) a licensed agent will contact you by phone, email, or text; (4) rates depend on underwriting, eligibility, location, driving history, credit profile, and other factors; (5) rates shown are illustrative only.</p><h3>4. No Guarantee of Coverage or Savings</h3><p>Savings and rates shown vary based on individual factors. Any rate examples are illustrative and may not represent typical or guaranteed results.</p><h3>5. Third-Party Insurers</h3><p>4 Legacy Insurance Agency LLC works with multiple carriers. Product availability may vary. The agency does not represent all insurers in the marketplace.</p><h3>6. Communications</h3><p>By submitting your contact information, you consent to be contacted by a licensed agent by phone, email, or text. You may opt out at any time by contacting us directly.</p><h3>7. Accuracy of Information</h3><p>4 Legacy Insurance Agency LLC makes no representations or warranties regarding the accuracy or reliability of any content on this website. Insurance laws, regulations, and product availability are subject to change.</p>` },
+    privacy: { title: 'Privacy Policy', eff: 'Effective Date: March 24, 2026', body: `<h3>1. Introduction</h3><p>4 Legacy Insurance Agency LLC is committed to protecting the privacy of individuals who visit www.4legacyinsurance.com and submit information through our quote request forms.</p><h3>2. Information We Collect</h3><p>When you submit a quote form we may collect: full name, phone number, email address, ZIP code, preferred contact time, and insurance-specific information you voluntarily provide. We do not collect payment information, Social Security Numbers, or government-issued ID numbers.</p><h3>3. How We Use Your Information</h3><p>We use your information solely to respond to your inquiry, prepare a personalized quote, contact you about your request, and comply with legal obligations. We do not sell, rent, or share your personal information with third parties for marketing purposes.</p><h3>4. Information Sharing</h3><p>Your information is used exclusively by the licensed agents of 4 Legacy Insurance Agency LLC. We do not share it with lead aggregators, other agencies, advertisers, or analytics companies. We may disclose it only if required by law or governmental authority.</p><h3>5. Data Security</h3><p>We take reasonable technical and administrative measures to protect your information. Form submissions are transmitted via encrypted channels. No method of Internet transmission is 100% secure.</p><h3>6. Data Retention</h3><p>Quote request information that does not result in a policy may be retained for up to 12 months for follow-up, after which it is securely deleted.</p><h3>7. Communications Consent (TCPA)</h3><p>By submitting your phone number, you expressly consent to receive calls and text messages from 4 Legacy Insurance Agency LLC, including via automated dialing systems or pre-recorded messages. Consent is not a condition of purchase. Opt out by replying STOP, calling 407-747-5813, or emailing Respejo@4legacyinsurance.com.</p><h3>8. Children's Privacy</h3><p>Our Site is not directed to individuals under 18. We do not knowingly collect information from minors. Contact us immediately if you believe a minor has submitted information.</p><h3>9. Florida Privacy Rights</h3><p>Florida residents may request deletion of their information from our records by contacting us directly.</p><h3>10. Changes to This Policy</h3><p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated effective date.</p>` },
+    terms: { title: 'Terms of Use', eff: 'Effective Date: March 24, 2026', body: `<h3>1. Acceptance of Terms</h3><p>By accessing or using www.4legacyinsurance.com (the "Site"), you agree to be bound by these Terms of Use. If you do not agree, please do not use the Site. 4 Legacy Insurance Agency LLC may modify these Terms at any time; continued use constitutes acceptance.</p><h3>2. Description of Services</h3><p>The Site is operated by 4 Legacy Insurance Agency LLC, a Florida-licensed insurance agency. It provides general insurance information and allows consumers to submit quote requests. It does not sell, bind, or issue policies directly. All transactions are handled by licensed agents.</p><h3>3. Eligibility</h3><p>You must be at least 18 years of age to use this Site. By submitting a form, you represent that the information provided is accurate, complete, and current.</p><h3>4. Quote Request Forms</h3><p>Submitting a quote form does not constitute an insurance application or create any contractual obligation. Receipt of your information does not guarantee coverage or any particular rate.</p><h3>5. No Insurance Advice</h3><p>Information on this Site is for general informational purposes only and does not constitute insurance or legal advice. Consult a licensed agent for coverage appropriate to your situation.</p><h3>6. Intellectual Property</h3><p>All content on this Site is the property of 4 Legacy Insurance Agency LLC and is protected by applicable intellectual property laws. Reproduction without written permission is prohibited.</p><h3>7. Prohibited Uses</h3><p>You agree not to submit false information, violate applicable laws, attempt unauthorized access to Site systems, transmit harmful content, or use automated tools to scrape information from the Site.</p><h3>8. Limitation of Liability</h3><p>To the fullest extent permitted by law, 4 Legacy Insurance Agency LLC shall not be liable for any indirect or consequential damages. Total liability shall not exceed $100.</p><h3>9. Disclaimer of Warranties</h3><p>The Site and its content are provided on an "as is" and "as available" basis without warranties of any kind.</p><h3>10. Governing Law</h3><p>These Terms are governed by the laws of the State of Florida. Disputes shall be resolved in the courts of Osceola County, Florida.</p>` }
+  }
+};
+
+let currentLang = 'es';
+
+function openLegal(type) {
+  const t = LEGAL[currentLang][type];
+  document.getElementById('legal-modal-title').textContent = t.title;
+  document.getElementById('legal-modal-body').innerHTML = t.body;
+  document.getElementById('legal-modal-eff').textContent = t.eff;
+  document.getElementById('legal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLegal() {
+  document.getElementById('legal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function legalOverlayClick(e) {
+  if (e.target === document.getElementById('legal-overlay')) closeLegal();
+}
+
+/* ══ COMPLETE TRANSLATIONS ══ */
+const TX = {
+  es: {
+    wiz: {
+      step1: '¿En qué podemos ayudarte?',
+      step1lbl: 'Paso 1',
+      upsellTitle: 'Combina y ahorra más',
+      upsellLbl: 'Agrega Cobertura',
+      upsellMsg: 'Los clientes que combinan varias pólizas ahorran en promedio <strong style="color:var(--navy)">15–25%</strong>. ¿Te gustaría cotizar alguno de estos también?',
+      contactTitle: 'Casi listo — tus datos de contacto',
+      contactLbl: 'Último Paso',
+      back: '← Atrás',
+      next: 'Continuar →',
+      submit: 'Enviar Solicitud ✓',
+      sel: 'Selecciona…',
+      errSel: 'Por favor selecciona un tipo de seguro para continuar.',
+      errReq: (l) => `${l} es requerido.`,
+      errEmail: 'Por favor ingresa un correo válido.',
+      errPhone: 'Por favor ingresa un número de 10 dígitos.',
+      errZip: 'Por favor ingresa un código ZIP de 5 dígitos.',
+      errYear: 'Por favor ingresa un año de vehículo válido.',
+      errAge: 'Por favor ingresa una edad válida (16–99).',
+      successTitle: '¡Estamos terminando<br>su cotización!',
+      successMsg: (n) => `¡Gracias <strong>${n}</strong>! Hemos recibido su información. Nuestro equipo se pondrá en contacto con usted lo más pronto posible.`,
+      successNote: 'Si necesita ayuda inmediata también puede llamarnos directamente.',
+      sumTitle: 'Resumen de tu Solicitud',
+      sumSvc: 'Servicio',
+      sumAlso: 'También interesado en',
+      close: 'Volver al inicio',
+      svcs: { auto: 'Seguro de Auto', home: 'Seguro de Hogar', renters: 'Seguro de Renters', life: 'Seguro de Vida', health: 'Seguro de Salud' },
+      opts: [['auto', '🚗', 'Auto', 'Carros, Camiones, Motos'], ['home', '🏠', 'Hogar', 'Seguro de Casa'], ['renters', '🛋️', 'Renters', 'Seguro de Inquilino'], ['life', '❤️', 'Vida', 'Seguro de Vida'], ['health', '🏥', 'Salud', 'Planes de Salud']],
+      upsellSvcs: [
+        { id: 'auto', icon: '🚗', title: 'Seguro de Auto', desc: 'Protege tu vehículo' },
+        { id: 'home', icon: '🏠', title: 'Seguro de Hogar', desc: 'Protege tu propiedad' },
+        { id: 'renters', icon: '🛋️', title: 'Seguro de Renters', desc: 'Protege tus pertenencias' },
+        { id: 'life', icon: '❤️', title: 'Seguro de Vida', desc: 'Protege a tu familia' },
+        { id: 'health', icon: '🏥', title: 'Seguro de Salud', desc: 'Protege tu salud' }
+      ],
+      labels: {
+        year: 'Año', make: 'Marca', model: 'Modelo', vehicleType: 'Tipo de Vehículo',
+        ownership: 'Propiedad del Vehículo', driverAge: 'Edad del Conductor Principal',
+        drivers: 'Conductores en la Póliza', record: '¿Accidentes o infracciones en los últimos 3 años?',
+        status: 'Estado actual de tu seguro', firstName: 'Nombre', lastName: 'Apellido',
+        phone: 'Teléfono', email: 'Correo Electrónico', zip: 'ZIP',
+        contactTime: 'Horario de contacto preferido', propertyType: 'Tipo de Propiedad',
+        yearBuilt: 'Año de Construcción', sqft: 'Pies Cuadrados', propertyOwnership: 'Propiedad',
+        homeValue: 'Valor estimado de la propiedad', dob: 'Fecha de Nacimiento',
+        gender: 'Género', tobacco: 'Uso de Tabaco', healthStatus: 'Estado de Salud General',
+        lifeType: 'Tipo de seguro de vida', coverageAmount: 'Monto de cobertura necesario',
+        protecting: '¿A quién estás protegiendo?', planType: 'Tipo de Plan',
+        householdSize: 'Tamaño del Hogar', income: 'Ingreso anual del hogar (aproximado)',
+        coverageType: 'Tipo de cobertura necesaria', residenceType: 'Tipo de Residencia',
+        protect: '¿Qué necesitas proteger?'
+      }
+    }
+  },
+  en: {
+    wiz: {
+      step1: 'What can we help you with?',
+      step1lbl: 'Step 1',
+      upsellTitle: 'Bundle & save more',
+      upsellLbl: 'Add Coverage',
+      upsellMsg: 'Clients who bundle multiple policies save an average of <strong style="color:var(--navy)">15–25%</strong>. Would you like quotes for any of these as well?',
+      contactTitle: 'Almost done — your contact details',
+      contactLbl: 'Last Step',
+      back: '← Back',
+      next: 'Continue →',
+      submit: 'Submit Request ✓',
+      sel: 'Select…',
+      errSel: 'Please select an insurance type to continue.',
+      errReq: (l) => `${l} is required.`,
+      errEmail: 'Please enter a valid email address.',
+      errPhone: 'Please enter a valid 10-digit phone number.',
+      errZip: 'Please enter a valid 5-digit ZIP code.',
+      errYear: 'Please enter a valid vehicle year.',
+      errAge: 'Please enter a valid age (16–99).',
+      successTitle: "We're preparing<br>your quote!",
+      successMsg: (n) => `Thank you <strong>${n}</strong>! We've received your information. Our team will contact you as soon as your quote is ready.`,
+      successNote: 'Or call us directly if you need immediate assistance.',
+      sumTitle: 'Quote Summary',
+      sumSvc: 'Service',
+      sumAlso: 'Also interested in',
+      close: 'Back to home',
+      svcs: { auto: 'Auto Insurance', home: 'Home Insurance', renters: 'Renters Insurance', life: 'Life Insurance', health: 'Health Insurance' },
+      opts: [['auto', '🚗', 'Auto', 'Cars, Trucks, Motorcycles'], ['home', '🏠', 'Home', 'Homeowners Coverage'], ['renters', '🛋️', 'Renters', 'Renters Insurance'], ['life', '❤️', 'Life', 'Life Insurance'], ['health', '🏥', 'Health', 'Health Plans']],
+      upsellSvcs: [
+        { id: 'auto', icon: '🚗', title: 'Auto Insurance', desc: 'Protect your vehicle' },
+        { id: 'home', icon: '🏠', title: 'Home Insurance', desc: 'Protect your property' },
+        { id: 'renters', icon: '🛋️', title: 'Renters Insurance', desc: 'Protect your belongings' },
+        { id: 'life', icon: '❤️', title: 'Life Insurance', desc: 'Protect your family' },
+        { id: 'health', icon: '🏥', title: 'Health Insurance', desc: 'Protect your health' }
+      ],
+      labels: {
+        year: 'Year', make: 'Make', model: 'Model', vehicleType: 'Vehicle Type',
+        ownership: 'Ownership', driverAge: 'Primary Driver Age',
+        drivers: 'Drivers on Policy', record: 'Any accidents or violations in last 3 years?',
+        status: 'Current insurance status', firstName: 'First Name', lastName: 'Last Name',
+        phone: 'Phone', email: 'Email', zip: 'ZIP',
+        contactTime: 'Preferred contact time', propertyType: 'Property Type',
+        yearBuilt: 'Year Built', sqft: 'Square Footage', propertyOwnership: 'Ownership',
+        homeValue: 'Estimated home value', dob: 'Date of Birth',
+        gender: 'Gender', tobacco: 'Tobacco Use', healthStatus: 'General Health',
+        lifeType: 'Type of life insurance', coverageAmount: 'Coverage amount needed',
+        protecting: 'Who are you protecting?', planType: 'Plan Type',
+        householdSize: 'Household Size', income: 'Annual household income (approximate)',
+        coverageType: 'Coverage type needed', residenceType: 'Type of Residence',
+        protect: 'What do you need to protect?'
+      }
+    }
+  }
+};
+
+let lang = 'es';
+let currentService = null;
+let currentStep = 0;
+let collectedData = {};
+let selectedUpsells = [];
+let currentSteps = [];
+
+function wiz() { return TX[lang].wiz; }
+
+function setLang(l) {
+  lang = l;
+  currentLang = l;
+  document.documentElement.lang = l === 'es' ? 'es' : 'en';
+  document.getElementById('btn-es').classList.toggle('active', l === 'es');
+  document.getElementById('btn-en').classList.toggle('active', l === 'en');
+  document.title = l === 'en' ? 'Free Quote | 4Legacy Insurance Agency' : 'Cotización Gratis | 4Legacy Insurance Agency';
+  // Actualizar textos del footer
+  const t = TX[l].wiz;
+  document.getElementById('txt-ft-company').textContent = l === 'es' ? 'Compañía' : 'Company';
+  document.getElementById('txt-ft-about').textContent = l === 'es' ? 'Quiénes Somos' : 'About Us';
+  document.getElementById('txt-ft-reviews').textContent = l === 'es' ? 'Reseñas' : 'Reviews';
+  document.getElementById('txt-ft-quote').textContent = l === 'es' ? 'Obtener Cotización' : 'Get a Quote';
+  document.getElementById('txt-ft-hours').textContent = l === 'es' ? 'Lun–Sáb · 9am–6pm' : 'Mon–Sat · 9am–6pm';
+  document.getElementById('txt-ft-copy').textContent = l === 'es' ? '© 2025 4 Legacy Insurance Agency · Todos los derechos reservados.' : '© 2025 4 Legacy Insurance Agency · All rights reserved.';
+  document.getElementById('btn-legal-disclaimer').textContent = l === 'es' ? 'Disclaimer' : 'Disclaimer';
+  document.getElementById('btn-legal-privacy').textContent = l === 'es' ? 'Política de Privacidad' : 'Privacy Policy';
+  document.getElementById('btn-legal-terms').textContent = l === 'es' ? 'Términos de Uso' : 'Terms of Use';
+  document.getElementById('txt-ft-license').innerHTML = l === 'es' ? 'Florida Agency License No. L135271 · Location No. 436922<br>4 Legacy Insurance Agency LLC no es una aseguradora. La cobertura está sujeta a aprobación de suscripción.' : 'Florida Agency License No. L135271 · Location No. 436922<br>4 Legacy Insurance Agency LLC is not an insurer. Coverage subject to underwriting approval.';
+  
+  if (currentSteps.length) {
+    renderStep();
+  }
+}
+
+function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+
+function renderStep() {
+  const step = currentSteps[currentStep];
+  if (!step) return;
+  const pct = Math.round((currentStep / currentSteps.length) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('step-label').textContent = step.label;
+  document.getElementById('step-title').textContent = step.title;
+  const W = wiz();
+  const isLast = currentStep === currentSteps.length - 1;
+  document.getElementById('wiz-body').innerHTML = `
+    <div id="step-content">${step.render()}</div>
+    <div class="wiz-nav">
+      ${currentStep > 0 ? `<button class="wiz-back" onclick="prevStep()">${W.back}</button>` : '<div></div>'}
+      <span class="step-count">${currentStep + 1} / ${currentSteps.length}</span>
+      <button class="wiz-next" onclick="nextStep()">${isLast ? W.submit : W.next}</button>
+    </div>`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function getSteps(service) {
+  const W = wiz();
+  const labels = W.labels;
+  const es = lang === 'es';
+  
+  function sel(id, labelKey, opts, req = true) {
+    const label = labels[labelKey] || labelKey;
+    return `<div class="wf-group"><label>${label}${req ? '<span class="req">*</span>' : ''}</label>
+    <select id="${id}"${req ? ' data-req="true"' : ''} data-label="${label}"><option value="" disabled selected>${W.sel}</option>
+    ${opts.map(o => `<option>${o}</option>`).join('')}</select></div>`;
+  }
+  
+  const contact = {
+    id: 'contact',
+    get title() { return wiz().contactTitle; },
+    get label() { return wiz().contactLbl; },
+    render() {
+      return `
+      <div class="wf-row">
+        <div class="wf-group"><label>${labels.firstName}<span class="req">*</span></label><input id="f_fname" data-req="true" data-label="${labels.firstName}" placeholder="${es ? 'Juan' : 'John'}"/></div>
+        <div class="wf-group"><label>${labels.lastName}<span class="req">*</span></label><input id="f_lname" data-req="true" data-label="${labels.lastName}" placeholder="${es ? 'Pérez' : 'Smith'}"/></div>
+      </div>
+      <div class="wf-row">
+        <div class="wf-group"><label>${labels.phone}<span class="req">*</span></label><input id="f_phone" data-req="true" data-label="${labels.phone}" data-type="phone" type="tel" placeholder="(407) 000-0000"/></div>
+        <div class="wf-group"><label>${labels.email}<span class="req">*</span></label><input id="f_email" data-req="true" data-label="${labels.email}" data-type="email" type="email" placeholder="${es ? 'juan@correo.com' : 'john@email.com'}"/></div>
+      </div>
+      <div class="wf-group"><label>${labels.zip}<span class="req">*</span></label><input id="f_zip" data-req="true" data-label="${labels.zip}" data-type="zip" placeholder="32801" maxlength="5" style="max-width:160px"/></div>
+      <div class="wf-group"><label>${labels.contactTime}</label>
+        <select id="f_time"><option value="" disabled selected>${W.sel}</option>
+          ${es ? '<option>Mañana (9am–12pm)</option><option>Tarde (12pm–5pm)</option><option>Noche (5pm–7pm)</option><option>Cualquier hora</option>' : '<option>Morning (9am–12pm)</option><option>Afternoon (12pm–5pm)</option><option>Evening (5pm–7pm)</option><option>Anytime</option>'}
+        </select>
+      </div>`;
+    },
+    collect() {
+      collectedData.nombre = v('f_fname');
+      collectedData.apellido = v('f_lname');
+      collectedData.telefono = v('f_phone');
+      collectedData.correo = v('f_email');
+      collectedData.zip = v('f_zip');
+      collectedData.horario = v('f_time');
+    }
+  };
+  
+  const upsellStep = {
+    id: 'upsell',
+    get title() { return wiz().upsellTitle; },
+    get label() { return wiz().upsellLbl; },
+    render() {
+      const others = W.upsellSvcs.filter(x => x.id !== service);
+      return `<p style="font-size:13px;color:var(--g600);margin-bottom:12px;font-weight:300">${W.upsellMsg}</p>
+      <div class="upsell-grid">${others.map(o => `<label class="upsell-card" id="up_${o.id}"><input type="checkbox" value="${o.id}" onchange="toggleUpsell('${o.id}')"/><div class="upsell-card-text"><div class="u-title">${o.icon} ${o.title}</div><div class="u-desc">${o.desc}</div></div></label>`).join('')}</div>`;
+    },
+    collect() { selectedUpsells = [...document.querySelectorAll('.upsell-card input:checked')].map(x => x.value); }
+  };
+  
+  const flows = {
+    auto: [
+      {
+        id: 'auto1', get lbl() { return es ? 'Paso 2 de 5' : 'Step 2 of 5'; }, get title() { return es ? 'Cuéntanos sobre tu vehículo' : 'Tell us about your vehicle'; },
+        render() {
+          return `<div class="wf-row"><div class="wf-group"><label>${labels.year}<span class="req">*</span></label><input id="a_year" data-req="true" data-label="${labels.year}" data-type="year" placeholder="2021" maxlength="4"/></div><div class="wf-group"><label>${labels.make}<span class="req">*</span></label><input id="a_make" data-req="true" data-label="${labels.make}" placeholder="Toyota"/></div></div>
+          <div class="wf-row"><div class="wf-group"><label>${labels.model}<span class="req">*</span></label><input id="a_model" data-req="true" data-label="${labels.model}" placeholder="Camry"/></div>
+          ${sel('a_type', 'vehicleType', es ? ['Carro / SUV', 'Camión / Van', 'Motocicleta', 'Bote', 'Vehículo Todo Terreno'] : ['Car / SUV', 'Truck / Van', 'Motorcycle', 'Boat', 'Off-Road Vehicle'])}</div>
+          ${sel('a_own', 'ownership', es ? ['Es mío (pagado)', 'Financiado / Préstamo', 'Arrendado (Lease)'] : ['I own it (paid off)', 'Financed / Loan', 'Leased'])}`;
+        },
+        collect() { collectedData.auto_año = v('a_year'); collectedData.auto_marca = v('a_make'); collectedData.auto_modelo = v('a_model'); collectedData.auto_tipo = v('a_type'); collectedData.auto_propiedad = v('a_own'); }
+      },
+      {
+        id: 'auto2', get lbl() { return es ? 'Paso 3 de 5' : 'Step 3 of 5'; }, get title() { return es ? 'Sobre los conductores' : 'About the drivers'; },
+        render() {
+          return `<div class="wf-row"><div class="wf-group"><label>${labels.driverAge}<span class="req">*</span></label><input id="a_age" data-req="true" data-label="${labels.driverAge}" data-type="age" type="number" placeholder="35" min="16" max="99"/></div>
+          ${sel('a_drivers', 'drivers', es ? ['Solo yo', 'Yo + esposo/pareja', 'Yo + conductor joven', '3 o más conductores'] : ['Just me', 'Me + spouse/partner', 'Me + teen driver', '3 or more drivers'])}</div>
+          ${sel('a_record', 'record', es ? ['No — historial limpio', '1 incidente menor', '2 o más incidentes', 'DUI / Infracción mayor'] : ['No — clean record', '1 minor incident', '2+ incidents', 'DUI / Major violation'])}
+          ${sel('a_status', 'status', es ? ['Asegurado — buscando mejor tarifa', 'Sin seguro actualmente', 'Licencia nueva'] : ['Currently insured — shopping for better rate', 'Not currently insured', 'Newly licensed'])}`;
+        },
+        collect() { collectedData.auto_edad = v('a_age'); collectedData.auto_conductores = v('a_drivers'); collectedData.auto_historial = v('a_record'); collectedData.auto_estado = v('a_status'); }
+      },
+      {
+        id: 'auto3', get lbl() { return es ? 'Paso 4 de 5' : 'Step 4 of 5'; }, get title() { return es ? 'Preferencias de cobertura' : 'Coverage preferences'; },
+        render() {
+          const items = es ? [['cl', 'Solo Responsabilidad', 'Mínimo requerido'], ['cc', 'Cobertura de Colisión', 'Cubre en accidentes'], ['co', 'Cobertura Completa', 'Robo, clima, sin colisión'], ['cr', 'Reembolso de Alquiler', 'Auto de renta'], ['crs', 'Asistencia en Carretera', 'Grúa, batería, llanta'], ['cg', 'Seguro GAP', 'Cubre el préstamo si es pérdida total']] : [['cl', 'Liability Only', 'State minimum required'], ['cc', 'Collision Coverage', 'Covers accidents'], ['co', 'Comprehensive', 'Theft, weather, non-collision'], ['cr', 'Rental Reimbursement', 'Car rental while yours is repaired'], ['crs', 'Roadside Assistance', 'Towing, battery, flat tire'], ['cg', 'GAP Insurance', 'Covers loan balance if totaled']];
+          return `<p style="font-size:12px;color:var(--g600);margin-bottom:12px;font-weight:300">${es ? 'Selecciona todas las coberturas que te gustaría incluir:' : "Select all coverage options you'd like:"}</p><div class="upsell-grid">${items.map(([id, t, d]) => `<label class="upsell-card"><input type="checkbox" id="${id}" onchange="this.closest('.upsell-card').classList.toggle('on',this.checked)"/><div class="upsell-card-text"><div class="u-title">${t}</div><div class="u-desc">${d}</div></div></label>`).join('')}</div>`;
+        },
+        collect() { collectedData.auto_cobertura = [...document.querySelectorAll('.upsell-card input:checked')].map(x => x.id).join(', '); }
+      }
+    ],
+    home: [
+      {
+        id: 'home1', get lbl() { return es ? 'Paso 2 de 4' : 'Step 2 of 4'; }, get title() { return es ? 'Sobre tu hogar' : 'About your home'; },
+        render() {
+          return `<div class="wf-row">${sel('h_type', 'propertyType', es ? ['Casa Unifamiliar', 'Condominio / Townhouse', 'Casa Móvil', 'Multifamiliar'] : ['Single Family Home', 'Condo / Townhouse', 'Mobile Home', 'Multi-Family'])}<div class="wf-group"><label>${labels.yearBuilt}</label><input id="h_year" placeholder="2005" maxlength="4"/></div></div>
+          <div class="wf-row"><div class="wf-group"><label>${labels.sqft}</label><input id="h_sqft" placeholder="1,800 sq ft"/></div>${sel('h_own', 'propertyOwnership', es ? ['Es mía', 'La estoy comprando', 'La estoy rentando'] : ["I own it", "I'm purchasing it", "I'm renting"])}</div>
+          ${sel('h_val', 'homeValue', es ? ['Menos de $150,000', '$150,000 – $300,000', '$300,000 – $500,000', 'Más de $500,000'] : ['Under $150,000', '$150,000 – $300,000', '$300,000 – $500,000', 'Over $500,000'])}`;
+        },
+        collect() { collectedData.hogar_tipo = v('h_type'); collectedData.hogar_año = v('h_year'); collectedData.hogar_pies = v('h_sqft'); collectedData.hogar_propiedad = v('h_own'); collectedData.hogar_valor = v('h_val'); }
+      },
+      {
+        id: 'home2', get lbl() { return es ? 'Paso 3 de 4' : 'Step 3 of 4'; }, get title() { return es ? 'Detalles de cobertura' : 'Coverage details'; },
+        render() {
+          const items = es ? [['hd', 'Cobertura de Vivienda', 'Estructura de tu hogar'], ['hp', 'Bienes Personales', 'Muebles, electrónicos, ropa'], ['hl', 'Responsabilidad', 'Si alguien se lesiona en tu propiedad'], ['hf', 'Seguro contra Inundaciones', 'No incluido en pólizas estándar'], ['hw', 'Viento / Huracán', 'Eventos de viento fuerte'], ['hj', 'Artículos de Valor / Joyas', 'Propiedad personal programada']] : [['hd', 'Dwelling Coverage', 'Structure of your home'], ['hp', 'Personal Property', 'Furniture, electronics, clothing'], ['hl', 'Liability', 'If someone is injured on your property'], ['hf', 'Flood Insurance', 'Not in standard policies'], ['hw', 'Wind / Hurricane', 'High-wind events'], ['hj', 'Valuables / Jewelry', 'Scheduled personal property']];
+          return `<div class="upsell-grid">${items.map(([id, t, d]) => `<label class="upsell-card"><input type="checkbox" id="${id}" onchange="this.closest('.upsell-card').classList.toggle('on',this.checked)"/><div class="upsell-card-text"><div class="u-title">${t}</div><div class="u-desc">${d}</div></div></label>`).join('')}</div>`;
+        },
+        collect() { }
+      }
+    ],
+    life: [
+      {
+        id: 'life1', get lbl() { return es ? 'Paso 2 de 4' : 'Step 2 of 4'; }, get title() { return es ? 'Cuéntanos sobre ti' : 'Tell us about yourself'; },
+        render() {
+          return `<div class="wf-row"><div class="wf-group"><label>${labels.dob}<span class="req">*</span></label><input id="l_dob" data-req="true" data-label="${labels.dob}" data-type="dob" type="date"/></div>${sel('l_gender', 'gender', es ? ['Masculino', 'Femenino', 'Prefiero no decir'] : ['Male', 'Female', 'Prefer not to say'])}</div>
+          <div class="wf-row">${sel('l_tobacco', 'tobacco', es ? ['No', 'Sí — cigarrillos', 'Sí — otro', 'Ex fumador'] : ['No', 'Yes — cigarettes', 'Yes — other', 'Former smoker'])}${sel('l_health', 'healthStatus', es ? ['Excelente', 'Bueno', 'Regular', 'Malo'] : ['Excellent', 'Good', 'Fair', 'Poor'])}</div>`;
+        },
+        collect() { collectedData.vida_nacimiento = v('l_dob'); collectedData.vida_genero = v('l_gender'); collectedData.vida_tabaco = v('l_tobacco'); collectedData.vida_salud = v('l_health'); }
+      },
+      {
+        id: 'life2', get lbl() { return es ? 'Paso 3 de 4' : 'Step 3 of 4'; }, get title() { return es ? 'Objetivos de cobertura' : 'Coverage goals'; },
+        render() {
+          return `${sel('l_type', 'lifeType', es ? ['Vida a Término (10–30 años)', 'Vida Entera (permanente)', 'Gastos Finales', 'No estoy seguro'] : ['Term Life (10–30 years)', 'Whole Life (permanent)', 'Final Expense', 'Not sure — need guidance'])}
+          ${sel('l_amount', 'coverageAmount', es ? ['Menos de $50,000', '$50,000 – $100,000', '$100,000 – $250,000', '$250,000 – $500,000', 'Más de $500,000'] : ['Under $50,000', '$50,000 – $100,000', '$100,000 – $250,000', '$250,000 – $500,000', 'Over $500,000'])}
+          ${sel('l_who', 'protecting', es ? ['Esposo/a o Pareja', 'Hijos', 'Padres', 'Socio de Negocio', 'Varios beneficiarios'] : ['Spouse / Partner', 'Children', 'Parents', 'Business partner', 'Multiple beneficiaries'])}`;
+        },
+        collect() { collectedData.vida_tipo = v('l_type'); collectedData.vida_monto = v('l_amount'); collectedData.vida_beneficiario = v('l_who'); }
+      }
+    ],
+    health: [
+      {
+        id: 'health1', get lbl() { return es ? 'Paso 2 de 3' : 'Step 2 of 3'; }, get title() { return es ? 'Sobre tu hogar y familia' : 'About your household'; },
+        render() {
+          return `<div class="wf-row">${sel('hl_plan', 'planType', es ? ['Individual', 'Familiar', 'Pareja'] : ['Individual', 'Family', 'Couple'])}${sel('hl_size', 'householdSize', es ? ['1 persona', '2 personas', '3–4 personas', '5+ personas'] : ['1 person', '2 people', '3–4 people', '5+ people'])}</div>
+          <div class="wf-group"><label>${labels.income}</label><select id="hl_income"><option value="" disabled selected>${W.sel}</option>${es ? '<option>Menos de $30,000</option><option>$30,000 – $60,000</option><option>$60,000 – $100,000</option><option>Más de $100,000</option>' : '<option>Under $30,000</option><option>$30,000 – $60,000</option><option>$60,000 – $100,000</option><option>Over $100,000</option>'}</select></div>
+          ${sel('hl_type', 'coverageType', es ? ['Seguro de Salud (Mercado ACA)', 'Seguro de Renters', 'Ambos'] : ['Health Insurance (ACA Marketplace)', 'Renters Insurance', 'Both'])}`;
+        },
+        collect() { collectedData.salud_plan = v('hl_plan'); collectedData.salud_tamaño = v('hl_size'); collectedData.salud_ingreso = v('hl_income'); collectedData.salud_tipo = v('hl_type'); }
+      }
+    ],
+    renters: [
+      {
+        id: 'renters1', get lbl() { return es ? 'Paso 2 de 3' : 'Step 2 of 3'; }, get title() { return es ? 'Sobre tu residencia' : 'About your residence'; },
+        render() {
+          return `${sel('r_type', 'residenceType', es ? ['Apartamento', 'Casa rentada', 'Townhouse', 'Cuarto rentado'] : ['Apartment', 'Rented house', 'Townhouse', 'Rented room'])}
+          ${sel('r_cov', 'protect', es ? ['Solo mis pertenencias', 'Pertenencias + Responsabilidad', 'Pertenencias + Joyería de valor'] : ['Just my belongings', 'Belongings + Liability', 'Belongings + Valuable jewelry'])}`;
+        },
+        collect() { collectedData.renters_tipo = v('r_type'); collectedData.renters_cobertura = v('r_cov'); }
+      }
+    ]
+  };
+  
+  return [
+    {
+      id: 'service',
+      get label() { return wiz().step1lbl; },
+      get title() { return wiz().step1; },
+      render() { return `<div class="opt-grid">${wiz().opts.map(([id, icon, lbl, sub]) => `<div class="opt ${currentService === id ? 'selected' : ''}" onclick="selectService('${id}')"><div class="opt-icon">${icon}</div><div class="opt-label">${lbl}</div><div class="opt-sub">${sub}</div></div>`).join('')}</div>`; },
+      collect() { }
+    },
+    ...(flows[service] || []),
+    upsellStep,
+    contact
+  ];
+}
+
+function selectService(id) {
+  currentService = id;
+  document.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  currentSteps = getSteps(id);
+  currentStep = 1;
+  renderStep();
+}
+
+function toggleUpsell(id) { const c = document.getElementById('up_' + id); if (c) c.classList.toggle('on', c.querySelector('input').checked); }
+
+function showErr(el, msg) { el.classList.add('err'); if (!el.parentElement.querySelector('.field-err')) { const d = document.createElement('div'); d.className = 'field-err'; d.textContent = msg; el.parentElement.appendChild(d); } }
+function clearErr(el) { el.classList.remove('err'); const e = el.parentElement.querySelector('.field-err'); if (e) e.remove(); }
+function clearAllErrs() { document.querySelectorAll('.err').forEach(el => el.classList.remove('err')); document.querySelectorAll('.field-err,.opts-err').forEach(el => el.remove()); }
+
+function validateStep() {
+  clearAllErrs();
+  let ok = true;
+  const step = currentSteps[currentStep];
+  const W = wiz();
+  if (step.id === 'service') {
+    if (!currentService) { const e = document.createElement('div'); e.className = 'opts-err'; e.textContent = W.errSel; document.querySelector('#step-content').appendChild(e); ok = false; }
+    return ok;
+  }
+  document.querySelectorAll('[data-req="true"]').forEach(el => {
+    const val = (el.value || '').trim();
+    const label = el.dataset.label || '';
+    const type = el.dataset.type || '';
+    if (!val) { showErr(el, W.errReq(label)); ok = false; return; }
+    if (type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) { showErr(el, W.errEmail); ok = false; return; }
+    if (type === 'phone' && val.replace(/\D/g, '').length < 10) { showErr(el, W.errPhone); ok = false; return; }
+    if (type === 'zip' && !/^\d{5}$/.test(val)) { showErr(el, W.errZip); ok = false; return; }
+    if (type === 'year') { const yr = parseInt(val); if (isNaN(yr) || yr < 1980 || yr > new Date().getFullYear() + 1) { showErr(el, W.errYear); ok = false; return; } }
+    if (type === 'age') { const ag = parseInt(val); if (isNaN(ag) || ag < 16 || ag > 99) { showErr(el, W.errAge); ok = false; return; } }
+    clearErr(el);
+  });
+  if (!ok) { const f = document.querySelector('.err'); if (f) f.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  return ok;
+}
+
+function nextStep() {
+  if (!validateStep()) return;
+  const step = currentSteps[currentStep];
+  if (step.collect) step.collect();
+  if (currentStep === currentSteps.length - 1) { submitQuote(); return; }
+  currentStep++;
+  if (step.id === 'service') { currentSteps = getSteps(currentService); currentStep = 1; }
+  renderStep();
+}
+function prevStep() { if (currentStep > 0) { currentStep--; renderStep(); } }
+
+async function submitQuote() {
+  const W = wiz();
+  const summaryRows = Object.entries(collectedData).filter(([k, val]) => val).slice(0, 6)
+    .map(([k, val]) => `<div class="summary-row"><span class="key">${k.replace(/_/g, ' ')}</span><span class="val">${val}</span></div>`).join('');
+  const payload = { ...collectedData, service: W.svcs[currentService] || currentService, extras: selectedUpsells.map(u => W.svcs[u] || u).join(', ') };
+  
+  // Enviar por EmailJS
+  try {
+    await emailjs.send('service_jljkfkd', 'template_fn77aea', payload);
+    console.log('Email enviado con éxito');
+  } catch (e) {
+    console.error('Error al enviar email:', e);
+  }
+  
+  document.getElementById('prog-fill').style.width = '100%';
+  document.getElementById('wiz-head').style.display = 'none';
+  document.getElementById('wiz-body').innerHTML = `
+  <div class="wiz-success">
+    <div class="wiz-success-icon">🎉</div>
+    <h2>${W.successTitle}</h2>
+    <p>${W.successMsg(collectedData.nombre || '')}</p>
+    <a href="tel:4077475813" class="phone-big">📞 407-747-5813</a>
+    <p style="font-size:12px">${W.successNote}</p>
+    <div class="summary-box">
+      <h4>${W.sumTitle}</h4>
+      <div class="summary-row"><span class="key">${W.sumSvc}</span><span class="val">${W.svcs[currentService] || currentService}</span></div>
+      ${selectedUpsells.length ? `<div class="summary-row"><span class="key">${W.sumAlso}</span><span class="val">${selectedUpsells.map(u => W.svcs[u] || u).join(', ')}</span></div>` : ''}
+      ${summaryRows}
+    </div>
+    <a href="index.html" class="btn-home">${W.close}</a>
+  </div>`;
+}
+
+function init() {
+  const browserLang = (navigator.language || navigator.userLanguage || 'es').toLowerCase();
+  const initialLang = browserLang.startsWith('en') ? 'en' : 'es';
+  setLang(initialLang);
+  currentService = null;
+  currentStep = 0;
+  collectedData = {};
+  selectedUpsells = [];
+  currentSteps = getSteps('auto');
+  renderStep();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+// Reveal animations
+const obs = new IntersectionObserver(entries => entries.forEach(x => { if (x.isIntersecting) { x.target.classList.add('in'); obs.unobserve(x.target); } }), { threshold: .1 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

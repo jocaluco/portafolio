@@ -1,0 +1,35 @@
+{
+  "name": "RoadMoney",
+  "short_name": "RoadMoney",
+  "description": "Gestiona tus ganancias de Uber & Lyft, metas diarias y finanzas personales.",
+  "start_url": "/proyectos/roadmoney/",
+  "display": "standalone",
+  "background_color": "#090b0f",
+  "theme_color": "#090b0f",
+  "orientation": "portrait-primary",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/proyectos/roadmoney/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/proyectos/roadmoney/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Registrar viaje",
+      "short_name": "Viaje",
+      "description": "Abre RoadMoney directo a la pantalla de hoy",
+      "url": "/proyectos/roadmoney/",
+      "icons": [{ "src": "/proyectos/roadmoney/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["finance", "productivity"]
+}
