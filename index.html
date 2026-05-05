@@ -23,6 +23,8 @@
     --card-bg: rgba(255,255,255,0.04);
     --lybe-green: #30D158;
     --lybe-blue: #0A84FF;
+    --nextspot-green: #10B981;
+    --nextspot-blue: #3B82F6;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -301,6 +303,54 @@
     color: #0A84FF;
   }
 
+  /* Estilo para Next Spot */
+  .nextspot-thumb {
+    background: linear-gradient(135deg, #0a1a1a, #061212);
+    position: relative;
+  }
+  .nextspot-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #10B981, #3B82F6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .nextspot-badge {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
+  }
+  .nextspot-badge span {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: rgba(16,185,129,0.2);
+    color: #10B981;
+    font-family: 'DM Mono', monospace;
+  }
+  .nextspot-badge span:last-child {
+    background: rgba(59,130,246,0.2);
+    color: #3B82F6;
+  }
+  .map-preview {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 40%, rgba(59,130,246,0.15), transparent);
+  }
+  .map-preview::before {
+    content: '🗺️';
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    font-size: 24px;
+    opacity: 0.6;
+  }
+
   #servicios {
     padding: 7rem 4rem;
     background: var(--bg2);
@@ -546,6 +596,31 @@
           <a target="_blank" href="proyectos/lybe/lybe-index.html" class="project-link">🎬 Elegir rol →</a>
           <a target="_blank" href="proyectos/lybe/lybe-driver.html" class="project-link">🚕 Panel Conductor</a>
           <a target="_blank" href="proyectos/lybe/lybe-passenger.html" class="project-link">👤 Panel Pasajero</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEXT SPOT - Nueva app de estacionamiento colaborativo -->
+<a target="_blank" href="proyectos/nextspot/nextspot.html" class="project-link">Probar Next Spot →</a>      <div class="project-thumb nextspot-thumb" style="background: linear-gradient(135deg, #0a1a1a, #061212); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; position: relative;">
+        <div class="map-preview"></div>
+        <div style="display: flex; gap: 12px; margin-bottom: 8px; z-index: 1;">
+          <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #1a2e1a, #0a1a0a); border: 1px solid #10B981; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;">🅿️</div>
+          <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #1a2a3e, #0a1a2a); border: 1px solid #3B82F6; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;">🗺️</div>
+        </div>
+        <div class="nextspot-logo" style="font-size: 1.5rem; letter-spacing: 2px;">NEXT SPOT</div>
+        <div class="nextspot-badge">
+          <span>Parking</span>
+          <span>Real-time</span>
+        </div>
+      </div>
+      <div class="project-body">
+        <div class="project-type">Web App · Estacionamiento colaborativo</div>
+        <div class="project-name">Next Spot · Parking App</div>
+        <div class="project-desc">
+          Aplicación estilo Waze para estacionamiento colaborativo. Conecta conductores con espacios disponibles en tiempo real. Mapa interactivo, geolocalización, ofertas por distancia, pull-to-refresh y más.
+        </div>
+        <div class="project-links">
+          <a target="_blank" href="../index.html" class="project-link">🗺️ Probar Next Spot →</a>
         </div>
       </div>
     </div>
