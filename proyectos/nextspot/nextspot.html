@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Parking App - Next Spot | Estacionamiento en calle</title>
+    <title>Parking App - Next Spot | Mantén presionado en el mapa</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -116,6 +116,9 @@
         .drag-instruction.hidden { opacity: 0; visibility: hidden; }
         
         .status-badge { background: #EFF6FF; color: #3B82F6; padding: 4px 12px; border-radius: 20px; font-size: 11px; }
+        
+        /* Crosshair cursor para indicar que se puede tocar */
+        .crosshair-cursor { cursor: crosshair; }
     </style>
 </head>
 <body>
@@ -226,15 +229,13 @@
         <p class="text-muted" style="text-align: center; margin-top: 12px;">Tienes 5 minutos para llegar</p>
     </div>
 
-    <div id="dragInstruction" class="drag-instruction hidden"><i class="fas fa-fingerprint"></i> Mantén presionado en el mapa para ajustar la ubicación</div>
+    <div id="dragInstruction" class="drag-instruction hidden"><i class="fas fa-fingerprint"></i> Mantén presionado en el mapa para mover el vehículo</div>
 
-    <!-- Botones flotantes -->
     <div id="onlineBadge" class="online-badge hidden"><i class="fas fa-circle" style="font-size: 8px; margin-right: 6px;"></i> Buscando estacionamientos...</div>
     <button id="powerBtn" class="power-btn"><i id="powerIcon" class="fas fa-power-off"></i></button>
     <button id="myLocationBtn" class="my-location-btn"><i class="fas fa-location-dot"></i></button>
     <button id="fabParkBtn" class="fab-park"><i class="fas fa-parking"></i></button>
 
-    <!-- Vista de Vehículos -->
     <div id="vehiclesView" class="vehicles-view">
         <div class="vehicles-header">
             <button class="back-to-map" id="backToMapBtn"><i class="fas fa-arrow-left"></i></button>
@@ -244,7 +245,6 @@
         <div class="vehicles-content" id="vehiclesList"></div>
     </div>
 
-    <!-- Modal -->
     <div id="vehicleModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header"><span class="modal-title" id="modalTitle">Agregar Vehículo</span><button class="close-modal" id="closeModalBtn"><i class="fas fa-times"></i></button></div>
@@ -287,43 +287,8 @@
     
     let map, userMarker, parkingMarker = null, currentPosition = null, currentAddress = "Obteniendo dirección...";
     let locationReceived = false, locationCallbacks = [], locationRequested = false, parkingMarkers = [];
-    
-    // ========== FUNCIÓN PARA SNAP TO STREET (ajustar a la calle más cercana) ==========
-    // Esta función toma coordenadas y las ajusta a la calle más cercana
-    // usando puntos de referencia de calles en el Bronx
-    function snapToStreet(lat, lng) {
-        // Calles de referencia en el Bronx con sus coordenadas aproximadas en la calle
-        const streetPoints = [
-            { lat: 40.8550, lng: -73.8650, name: "Wallace Ave" },      // 2160 Wallace Ave
-            { lat: 40.8545, lng: -73.8655, name: "Wallace Ave" },      // Wallace Ave más al sur
-            { lat: 40.8555, lng: -73.8645, name: "Wallace Ave" },      // Wallace Ave más al norte
-            { lat: 40.8300, lng: -73.8800, name: "Westchester Ave" },   // 1500 Westchester Ave
-            { lat: 40.8125, lng: -73.9050, name: "E 149th St" },        // 800 E 149th St
-            { lat: 40.8610, lng: -73.8978, name: "Fordham Plaza" },     // 1 Fordham Plaza
-            { lat: 40.8670, lng: -73.8960, name: "E Kingsbridge Rd" },  // 35 E Kingsbridge Rd
-            { lat: 40.8670, lng: -73.8320, name: "Baychester Ave" }      // 100 Baychester Ave
-        ];
-        
-        // Encontrar el punto de calle más cercano
-        let closest = streetPoints[0];
-        let minDist = calcularDistancia(lat, lng, closest.lat, closest.lng);
-        
-        for (let i = 1; i < streetPoints.length; i++) {
-            const dist = calcularDistancia(lat, lng, streetPoints[i].lat, streetPoints[i].lng);
-            if (dist < minDist) {
-                minDist = dist;
-                closest = streetPoints[i];
-            }
-        }
-        
-        // Si estamos cerca de un punto de calle conocido, usarlo
-        if (minDist < 0.05) { // menos de 50 metros
-            return { lat: closest.lat, lng: closest.lng, snapped: true };
-        }
-        
-        // Si no, devolver las coordenadas originales
-        return { lat: lat, lng: lng, snapped: false };
-    }
+    let longPressTimer = null;
+    let isLongPressActive = false;
     
     // ========== FUNCIONES ==========
     function calcularDistancia(lat1, lon1, lat2, lon2) {
@@ -427,14 +392,11 @@
         if(navigator.vibrate) navigator.vibrate(50);
         if(offerTimerInterval) clearInterval(offerTimerInterval);
         
-        // Ajustar ubicación a la calle más cercana
-        const snapped = snapToStreet(currentAcceptedOffer.location.lat, currentAcceptedOffer.location.lng);
-        
         currentUser.isParked = true; currentUser.isOnline = false; 
-        currentUser.parkedLocation = { lat: snapped.lat, lng: snapped.lng }; 
+        currentUser.parkedLocation = { lat: currentAcceptedOffer.location.lat, lng: currentAcceptedOffer.location.lng }; 
         currentUser.parkedAddress = currentAcceptedOffer.address;
         
-        addParkingMarker(snapped.lat, snapped.lng, currentAcceptedOffer.address);
+        addParkingMarker(currentAcceptedOffer.location.lat, currentAcceptedOffer.location.lng, currentAcceptedOffer.address);
         saveParkingToLocal();
         
         const spotIndex = availableSpots.findIndex(s => s.id === currentAcceptedOffer.id);
@@ -454,75 +416,100 @@
         updateUI(); showToast("Oferta cancelada");
     }
     
-    // ========== ESTACIONAMIENTO CON MARCADOR EDITABLE (mantener presionado) ==========
+    // ========== ESTACIONAMIENTO - MANTENER PRESIONADO EN EL MAPA ==========
+    function initLongPressOnMap() {
+        map.on('contextmenu', function(e) {
+            // Prevenir menú contextual del navegador
+            e.originalEvent.preventDefault();
+            return false;
+        });
+        
+        // Para dispositivos móviles - touchstart + touchmove + touchend
+        let touchTimer = null;
+        let touchStartPos = null;
+        
+        map.on('touchstart', function(e) {
+            if(!currentUser.isParked) return;
+            touchStartPos = e.originalEvent.touches[0];
+            touchTimer = setTimeout(() => {
+                // Long press detectado
+                isLongPressActive = true;
+                const latlng = e.latlng;
+                showToast("📍 Moviendo vehículo a esta ubicación...");
+                moveParkingMarker(latlng.lat, latlng.lng);
+                document.getElementById("dragInstruction").classList.add("hidden");
+            }, 500);
+        });
+        
+        map.on('touchmove', function(e) {
+            if(touchTimer) {
+                clearTimeout(touchTimer);
+                touchTimer = null;
+            }
+        });
+        
+        map.on('touchend', function(e) {
+            if(touchTimer) {
+                clearTimeout(touchTimer);
+                touchTimer = null;
+            }
+            setTimeout(() => { isLongPressActive = false; }, 100);
+        });
+        
+        // Para escritorio - mousedown + mousemove + mouseup
+        let mouseTimer = null;
+        
+        map.on('mousedown', function(e) {
+            if(!currentUser.isParked) return;
+            mouseTimer = setTimeout(() => {
+                isLongPressActive = true;
+                showToast("📍 Moviendo vehículo a esta ubicación...");
+                moveParkingMarker(e.latlng.lat, e.latlng.lng);
+                document.getElementById("dragInstruction").classList.add("hidden");
+            }, 500);
+        });
+        
+        map.on('mousemove', function() {
+            if(mouseTimer) {
+                clearTimeout(mouseTimer);
+                mouseTimer = null;
+            }
+        });
+        
+        map.on('mouseup', function() {
+            if(mouseTimer) {
+                clearTimeout(mouseTimer);
+                mouseTimer = null;
+            }
+        });
+    }
+    
+    function moveParkingMarker(lat, lng) {
+        if(!currentUser.isParked) return;
+        
+        if(parkingMarker) {
+            parkingMarker.setLatLng([lat, lng]);
+        } else {
+            addParkingMarker(lat, lng, currentUser.parkedAddress || "Tu ubicación");
+        }
+        
+        currentUser.parkedLocation = { lat: lat, lng: lng };
+        
+        obtenerDireccion(lat, lng, (direccion) => {
+            currentUser.parkedAddress = direccion;
+            document.getElementById("parkedAddress").innerText = direccion;
+            saveParkingToLocal();
+            showToast("📍 Ubicación actualizada: " + direccion.substring(0, 40));
+            
+            if(navigator.vibrate) navigator.vibrate(50);
+        });
+    }
+    
     function addParkingMarker(lat, lng, address) {
         if(parkingMarker) map.removeLayer(parkingMarker);
         
         parkingMarker = L.marker([lat, lng], { icon: parkedCarIcon }).addTo(map);
-        parkingMarker.bindTooltip('🚗 Tu vehículo está aquí - Mantén presionado para mover', { permanent: false, direction: 'top' });
-        
-        // Evento de mantener presionado (long press) para editar ubicación
-        let pressTimer = null;
-        
-        parkingMarker.on('mousedown', function(e) {
-            pressTimer = setTimeout(() => {
-                // Long press detected - activar modo edición
-                parkingMarker.dragging.enable();
-                parkingMarker.openTooltip();
-                showToast("📍 Arrastra el marcador a la ubicación exacta en la calle");
-                document.getElementById("dragInstruction").classList.remove("hidden");
-                
-                // Instrucción de cómo finalizar
-                parkingMarker.once('dragend', function(e) {
-                    const newPos = e.target.getLatLng();
-                    const snapped = snapToStreet(newPos.lat, newPos.lng);
-                    parkingMarker.setLatLng([snapped.lat, snapped.lng]);
-                    currentUser.parkedLocation = { lat: snapped.lat, lng: snapped.lng };
-                    obtenerDireccion(snapped.lat, snapped.lng, (direccion) => {
-                        currentUser.parkedAddress = direccion;
-                        document.getElementById("parkedAddress").innerText = direccion;
-                        showToast("📍 Ubicación actualizada: " + direccion.substring(0, 40));
-                        saveParkingToLocal();
-                    });
-                    parkingMarker.dragging.disable();
-                    document.getElementById("dragInstruction").classList.add("hidden");
-                });
-            }, 500);
-        });
-        
-        parkingMarker.on('mouseup', function() {
-            clearTimeout(pressTimer);
-        });
-        
-        // Para dispositivos táctiles
-        parkingMarker.on('touchstart', function(e) {
-            pressTimer = setTimeout(() => {
-                parkingMarker.dragging.enable();
-                parkingMarker.openTooltip();
-                showToast("📍 Arrastra el marcador a la ubicación exacta en la calle");
-                document.getElementById("dragInstruction").classList.remove("hidden");
-                
-                parkingMarker.once('dragend', function(e) {
-                    const newPos = e.target.getLatLng();
-                    const snapped = snapToStreet(newPos.lat, newPos.lng);
-                    parkingMarker.setLatLng([snapped.lat, snapped.lng]);
-                    currentUser.parkedLocation = { lat: snapped.lat, lng: snapped.lng };
-                    obtenerDireccion(snapped.lat, snapped.lng, (direccion) => {
-                        currentUser.parkedAddress = direccion;
-                        document.getElementById("parkedAddress").innerText = direccion;
-                        showToast("📍 Ubicación actualizada: " + direccion.substring(0, 40));
-                        saveParkingToLocal();
-                    });
-                    parkingMarker.dragging.disable();
-                    document.getElementById("dragInstruction").classList.add("hidden");
-                });
-            }, 500);
-        });
-        
-        parkingMarker.on('touchend', function() {
-            clearTimeout(pressTimer);
-        });
-        
+        parkingMarker.bindTooltip('🚗 Tu vehículo está aquí', { permanent: false, direction: 'top' });
         map.setView([lat, lng], 17);
     }
     
@@ -534,8 +521,13 @@
     function initMap() {
         map = L.map('map', { zoomControl: false }).setView([BRONX_CENTER.lat, BRONX_CENTER.lng], 13);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+        
         const userIcon = L.divIcon({ html: '<div style="background:#3B82F6;width:22px;height:22px;border-radius:50%;border:3px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>', iconSize: [22, 22] });
         userMarker = L.marker([BRONX_CENTER.lat, BRONX_CENTER.lng], { icon: userIcon }).addTo(map);
+        
+        // Inicializar long press en el mapa
+        initLongPressOnMap();
+        
         loadSavedParking();
     }
     
@@ -548,12 +540,9 @@
             navigator.geolocation.getCurrentPosition(
                 (pos) => { 
                     currentPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude }; 
-                    // Ajustar a la calle más cercana
-                    const snapped = snapToStreet(currentPosition.lat, currentPosition.lng);
-                    currentPosition = snapped;
                     map.setView([currentPosition.lat, currentPosition.lng], 16); 
                     userMarker.setLatLng([currentPosition.lat, currentPosition.lng]); 
-                    obtenerDireccion(currentPosition.lat, currentPosition.lng, (direccion) => { currentAddress = direccion; if(loadingDiv) loadingDiv.style.display = "none"; showToast(`📍 Ubicación en calle: ${currentAddress.substring(0, 40)}`); }); 
+                    obtenerDireccion(currentPosition.lat, currentPosition.lng, (direccion) => { currentAddress = direccion; if(loadingDiv) loadingDiv.style.display = "none"; showToast(`📍 Ubicación: ${currentAddress.substring(0, 40)}`); }); 
                     locationReceived = true; locationCallbacks.forEach(cb => cb(currentPosition)); locationCallbacks = []; 
                 },
                 (error) => { let errorMsg = "No se pudo obtener tu ubicación."; if(error.code === 1) errorMsg = "Permiso denegado. Activa la ubicación."; if(loadingText) loadingText.innerHTML = `⚠️ ${errorMsg}`; if(requestBtn) requestBtn.style.display = "block"; currentPosition = { lat: BRONX_CENTER.lat, lng: BRONX_CENTER.lng }; currentAddress = "Bronx, NY (Demo)"; map.setView([currentPosition.lat, currentPosition.lng], 13); userMarker.setLatLng([currentPosition.lat, currentPosition.lng]); locationReceived = true; },
@@ -577,6 +566,18 @@
         const powerBtn = document.getElementById("powerBtn"), onlineBadge = document.getElementById("onlineBadge"), fabParkBtn = document.getElementById("fabParkBtn");
         if(isBusy) { powerBtn.classList.add("disabled"); onlineBadge.classList.add("hidden"); if(currentUser.isOnline) currentUser.isOnline = false; if(offersUpdateInterval) clearInterval(offersUpdateInterval); stopRadarAnimation(); } else { powerBtn.classList.remove("disabled"); }
         if(currentUser.isParked || currentUser.isWaiting || currentAcceptedOffer !== null) { fabParkBtn.classList.add("hidden"); } else { fabParkBtn.classList.remove("hidden"); }
+        
+        // Mostrar instrucción de long press solo cuando está estacionado
+        const dragInstruction = document.getElementById("dragInstruction");
+        if(currentUser.isParked) {
+            dragInstruction.classList.remove("hidden");
+            setTimeout(() => {
+                if(currentUser.isParked) dragInstruction.classList.add("hidden");
+            }, 5000);
+        } else {
+            dragInstruction.classList.add("hidden");
+        }
+        
         if(currentUser.isOnline && !isBusy && locationReceived) {
             powerBtn.classList.add("power-offline"); document.getElementById("powerIcon").className = "fas fa-times"; onlineBadge.classList.remove("hidden");
             updateParkingMarkers(); startRadarAnimation();
@@ -591,21 +592,25 @@
         if(!locationReceived) { showToast("Esperando tu ubicación..."); return; }
         if(navigator.vibrate) navigator.vibrate(50);
         
-        // Ajustar a la calle más cercana
-        const snapped = snapToStreet(currentPosition.lat, currentPosition.lng);
-        
         currentUser.isParked = true; currentUser.isOnline = false; currentUser.isWaiting = false; 
-        currentUser.parkedLocation = { lat: snapped.lat, lng: snapped.lng }; 
+        currentUser.parkedLocation = { lat: currentPosition.lat, lng: currentPosition.lng }; 
         currentUser.parkedAddress = currentAddress;
         
-        addParkingMarker(snapped.lat, snapped.lng, currentAddress);
+        addParkingMarker(currentPosition.lat, currentPosition.lng, currentAddress);
         saveParkingToLocal();
         
         document.getElementById("parkedAddress").innerText = currentAddress;
         document.getElementById("parkedVehicle").innerText = getVehicleName();
         document.getElementById("parkedCard").classList.remove("hidden");
         updateUI();
-        showToast("✅ Vehículo estacionado en la calle");
+        showToast("✅ Vehículo estacionado correctamente");
+        
+        // Mostrar instrucción de cómo mover el marcador
+        setTimeout(() => {
+            if(currentUser.isParked) {
+                showToast("💡 Mantén presionado en el mapa para ajustar la ubicación");
+            }
+        }, 2000);
     }
     
     function leaveSpot() {
@@ -692,7 +697,6 @@
     const requestBtn = document.getElementById("requestLocationBtn");
     if(requestBtn) { requestBtn.addEventListener('click', function() { this.style.display = "none"; document.getElementById("loadingText").innerHTML = '<i class="fas fa-spinner fa-spin"></i> Solicitando ubicación...'; requestLocation(); }); }
     
-    // Eventos
     document.getElementById("menuBtn").onclick = () => { document.getElementById("drawer").classList.add("open"); document.getElementById("drawerOverlay").classList.add("open"); };
     document.getElementById("drawerOverlay").onclick = () => { document.getElementById("drawer").classList.remove("open"); document.getElementById("drawerOverlay").classList.remove("open"); };
     document.getElementById("backToMapBtn").onclick = showMapView;
