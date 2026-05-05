@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Parking App - Mapa estilo Waze</title>
+    <title>Parking App - Next Spot</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
+        /* Tus estilos existentes... (se mantienen igual) */
         * {
             margin: 0;
             padding: 0;
@@ -41,7 +42,6 @@
             display: none !important;
         }
         
-        /* Header flotante */
         .app-header {
             position: fixed;
             top: 16px;
@@ -152,7 +152,7 @@
         .drawer-item i { width: 24px; font-size: 18px; }
         .drawer-logout { margin-top: auto; color: #EF4444; border-top: 1px solid #E5E7EB; padding-top: 20px; }
 
-        /* Tarjetas flotantes - todas sin fondo adicional */
+        /* Tarjetas flotantes */
         .waiting-card, .parked-card, .taken-card, .info-card, .accepted-offer-card {
             position: fixed;
             top: 80px;
@@ -174,7 +174,6 @@
         .accepted-offer-card { border: 1px solid #10B981; }
         .hidden { display: none; }
         
-        /* Lista de ofertas - sin contenedor, fondo transparente */
         .offers-list-container {
             position: fixed;
             top: 80px;
@@ -183,13 +182,9 @@
             max-height: 65vh;
             overflow-y: auto;
             z-index: 150;
-            /* Fondo transparente - sin contenedor */
         }
-        .offers-list-container.hidden {
-            display: none;
-        }
+        .offers-list-container.hidden { display: none; }
         
-        /* Pull to refresh indicator */
         .pull-to-refresh {
             text-align: center;
             padding: 12px;
@@ -260,7 +255,6 @@
             100% { transform: scale(1); opacity: 1; }
         }
         
-        /* Ofertas individuales - fondo blanco, sin contenedor externo */
         .offer-item {
             background: white;
             margin-bottom: 12px;
@@ -303,7 +297,6 @@
             gap: 4px;
         }
         
-        /* Skeleton loading */
         .skeleton-offer {
             background: white;
             margin-bottom: 12px;
@@ -343,12 +336,8 @@
             border-radius: 20px;
             backdrop-filter: blur(4px);
         }
-        .empty-offers i {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
+        .empty-offers i { font-size: 48px; margin-bottom: 16px; }
         
-        /* Botones flotantes */
         .fab-park {
             position: fixed;
             bottom: 90px;
@@ -443,6 +432,7 @@
             font-size: 14px;
             z-index: 50;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            text-align: center;
         }
         
         .close-card {
@@ -460,7 +450,6 @@
             margin-top: 8px;
         }
 
-        /* Vehículos */
         .vehicles-view {
             position: fixed;
             top: 0;
@@ -587,7 +576,6 @@
             margin-left: 8px;
         }
 
-        /* Modal */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -674,7 +662,11 @@
 <body>
 <div class="app-container">
     <div id="map"></div>
-    <div class="map-loading" id="mapLoading">📍 Solicitando tu ubicación...</div>
+    <div class="map-loading" id="mapLoading">
+        <i class="fas fa-location-dot" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+        <span id="loadingText">📍 Solicitando tu ubicación...</span>
+        <button id="requestLocationBtn" style="margin-top: 12px; background: #3B82F6; color: white; border: none; padding: 8px 20px; border-radius: 40px; font-family: 'Poppins', sans-serif; cursor: pointer; display: none;">Activar ubicación</button>
+    </div>
 
     <!-- Header -->
     <div class="app-header">
@@ -777,7 +769,7 @@
         <p class="text-muted" style="text-align: center; margin-top: 12px;">Tienes 5 minutos para llegar al estacionamiento</p>
     </div>
 
-    <!-- LISTA DE OFERTAS - SIN CONTENEDOR ADICIONAL, FONDO TRANSPARENTE -->
+    <!-- LISTA DE OFERTAS -->
     <div id="offersListContainer" class="offers-list-container hidden">
         <div id="pullToRefreshIndicator" class="pull-to-refresh" style="display: none;">
             <div class="refresh-spinner"></div> Actualizando ofertas...
@@ -904,6 +896,7 @@
     let currentAddress = "Obteniendo dirección...";
     let locationReceived = false;
     let locationCallbacks = [];
+    let locationRequested = false;
     
     // ========== FUNCIONES DE DISTANCIA ==========
     function calcularDistancia(lat1, lon1, lat2, lon2) {
@@ -974,7 +967,7 @@
         if(!container) return;
         
         if(!currentPosition) {
-            container.innerHTML = `<div class="empty-offers"><i class="fas fa-spinner fa-spin"></i><p>Esperando ubicación...</p></div>`;
+            container.innerHTML = `<div class="empty-offers"><i class="fas fa-spinner fa-spin"></i><p>Esperando ubicación...</p><p class="text-muted">Activa el modo ONLINE para ver estacionamientos cercanos</p></div>`;
             return;
         }
         
@@ -1197,6 +1190,7 @@
     
     // ========== MAPA Y GEOLOCALIZACIÓN ==========
     function initMap() {
+        // Crear el mapa primero
         map = L.map('map', { zoomControl: false }).setView([40.7580, -73.9855], 13);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { 
             attribution: '&copy; OSM', 
@@ -1209,17 +1203,33 @@
             iconSize: [22, 22] 
         });
         userMarker = L.marker([40.7580, -73.9855], { icon: userIcon }).addTo(map);
+    }
+    
+    function requestLocation() {
+        if(locationRequested) return;
+        locationRequested = true;
+        
+        const loadingDiv = document.getElementById("mapLoading");
+        const loadingText = document.getElementById("loadingText");
+        const requestBtn = document.getElementById("requestLocationBtn");
+        
+        if(loadingText) loadingText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Solicitando permiso de ubicación...';
         
         if(navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     currentPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    map.setView([currentPosition.lat, currentPosition.lng], 15);
+                    console.log("📍 Ubicación obtenida:", currentPosition.lat, currentPosition.lng);
+                    
+                    // Centrar el mapa
+                    map.setView([currentPosition.lat, currentPosition.lng], 16);
                     userMarker.setLatLng([currentPosition.lat, currentPosition.lng]);
                     
+                    // Obtener dirección
                     obtenerDireccion(currentPosition.lat, currentPosition.lng, (direccion) => {
                         currentAddress = direccion;
-                        document.getElementById("mapLoading").style.display = "none";
+                        if(loadingDiv) loadingDiv.style.display = "none";
+                        showToast(`📍 Ubicación: ${currentAddress.substring(0, 40)}...`);
                         renderOffers();
                     });
                     
@@ -1228,16 +1238,29 @@
                     locationCallbacks = [];
                 },
                 (error) => {
-                    document.getElementById("mapLoading").style.display = "none";
+                    console.error("Error de geolocalización:", error);
+                    let errorMsg = "No se pudo obtener tu ubicación.";
+                    if(error.code === 1) errorMsg = "Permiso denegado. Activa la ubicación en tu navegador.";
+                    if(error.code === 2) errorMsg = "Ubicación no disponible. Intenta de nuevo.";
+                    if(error.code === 3) errorMsg = "Tiempo de espera agotado.";
+                    
+                    if(loadingText) loadingText.innerHTML = `⚠️ ${errorMsg}`;
+                    if(requestBtn) requestBtn.style.display = "block";
+                    
+                    // Usar ubicación demo
                     currentPosition = { lat: 40.7580, lng: -73.9855 };
+                    currentAddress = "Times Square, Nueva York (Demo)";
+                    map.setView([currentPosition.lat, currentPosition.lng], 14);
+                    userMarker.setLatLng([currentPosition.lat, currentPosition.lng]);
                     locationReceived = true;
                     renderOffers();
                 },
-                { enableHighAccuracy: true, timeout: 10000 }
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
             );
         } else {
-            document.getElementById("mapLoading").style.display = "none";
+            if(loadingText) loadingText.innerHTML = "⚠️ Tu navegador no soporta geolocalización";
             currentPosition = { lat: 40.7580, lng: -73.9855 };
+            currentAddress = "Times Square, Nueva York (Demo)";
             locationReceived = true;
             renderOffers();
         }
@@ -1250,8 +1273,10 @@
                 if(data.display_name) {
                     const direccion = data.display_name.split(',')[0] + ', ' + data.display_name.split(',')[1];
                     if(callback) callback(direccion);
-                }
-            }).catch(() => {});
+                } else if(callback) callback(`📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+            }).catch(() => {
+                if(callback) callback(`📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+            });
     }
     
     function getVehicleName() {
@@ -1305,7 +1330,7 @@
             fabParkBtn.classList.remove("hidden");
         }
         
-        if(currentUser.isOnline && !isBusy) {
+        if(currentUser.isOnline && !isBusy && locationReceived) {
             powerBtn.classList.add("power-offline");
             document.getElementById("powerIcon").className = "fas fa-times";
             onlineBadge.classList.remove("hidden");
@@ -1314,7 +1339,7 @@
             
             if(!offersUpdateInterval) {
                 offersUpdateInterval = setInterval(() => {
-                    if(currentUser.isOnline && !currentUser.isParked && !currentUser.isWaiting && currentAcceptedOffer === null) {
+                    if(currentUser.isOnline && !currentUser.isParked && !currentUser.isWaiting && currentAcceptedOffer === null && locationReceived) {
                         renderOffers();
                     }
                 }, 30000);
@@ -1341,21 +1366,24 @@
         if(currentUser.isWaiting) { showToast("Ya tienes una oferta activa"); return; }
         if(currentAcceptedOffer) { showToast("Ya tienes una oferta aceptada pendiente"); return; }
         
+        if(!locationReceived) {
+            showToast("Esperando tu ubicación...");
+            return;
+        }
+        
         if(navigator.vibrate) navigator.vibrate(50);
         
-        waitForLocation((pos) => {
-            currentUser.parkedLocation = { lat: pos.lat, lng: pos.lng };
-            addParkingMarker(pos.lat, pos.lng, currentAddress);
-            currentUser.isParked = true;
-            currentUser.isOnline = false;
-            currentUser.isWaiting = false;
-            
-            document.getElementById("parkedAddress").innerText = currentAddress;
-            document.getElementById("parkedVehicle").innerText = getVehicleName();
-            document.getElementById("parkedCard").classList.remove("hidden");
-            updateUI();
-            showToast("✅ Vehículo estacionado correctamente");
-        });
+        currentUser.parkedLocation = { lat: currentPosition.lat, lng: currentPosition.lng };
+        addParkingMarker(currentPosition.lat, currentPosition.lng, currentAddress);
+        currentUser.isParked = true;
+        currentUser.isOnline = false;
+        currentUser.isWaiting = false;
+        
+        document.getElementById("parkedAddress").innerText = currentAddress;
+        document.getElementById("parkedVehicle").innerText = getVehicleName();
+        document.getElementById("parkedCard").classList.remove("hidden");
+        updateUI();
+        showToast("✅ Vehículo estacionado correctamente");
     }
     
     function leaveSpot() {
@@ -1459,10 +1487,15 @@
             return;
         }
         
+        if(!locationReceived) {
+            showToast("⚠️ Esperando tu ubicación...");
+            return;
+        }
+        
         if(navigator.vibrate) navigator.vibrate(30);
         currentUser.isOnline = !currentUser.isOnline;
         updateUI();
-        showToast(currentUser.isOnline ? "✅ Modo ONLINE activado" : "Modo OFFLINE");
+        showToast(currentUser.isOnline ? "✅ Modo ONLINE activado - Buscando estacionamientos cercanos" : "Modo OFFLINE");
     }
     
     function cancelWaitingOffer() {
@@ -1648,6 +1681,21 @@
     loadVehiclesFromLocal();
     updateUI();
     initPullToRefresh();
+    
+    // Solicitar ubicación después de que la página esté completamente cargada
+    window.addEventListener('load', function() {
+        setTimeout(requestLocation, 500);
+    });
+    
+    // Botón manual para solicitar ubicación
+    const requestBtn = document.getElementById("requestLocationBtn");
+    if(requestBtn) {
+        requestBtn.addEventListener('click', function() {
+            this.style.display = "none";
+            document.getElementById("loadingText").innerHTML = '<i class="fas fa-spinner fa-spin"></i> Solicitando ubicación...';
+            requestLocation();
+        });
+    }
     
     // Eventos
     document.getElementById("menuBtn").onclick = () => { document.getElementById("drawer").classList.add("open"); document.getElementById("drawerOverlay").classList.add("open"); };
