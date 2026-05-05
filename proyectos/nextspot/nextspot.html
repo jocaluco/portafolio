@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Parking App - Mapa estilo Waze</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background-color: #e8eef4;
+        }
+        
+        .leaflet-control-zoom {
+            display: none !important;
+        }
+        
+        .leaflet-control-attribution {
+            font-size: 8px;
+            opacity: 0.5;
+        }
+
+        /* Header flotante */
+        .app-header {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 200;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #3B82F6;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        .menu-btn:active { background: #E5E7EB; }
+        .points-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #EFF6FF;
+            padding: 6px 14px;
+            border-radius: 40px;
+        }
+        .points-container i { color: #FBBF24; font-size: 14px; }
+        .points-value { font-weight: 700; font-size: 16px; color: #1F2937; }
+
+        /* Drawer */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.3s;
+        }
+        .drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100%;
+            background: white;
+            z-index: 1001;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .drawer.open { transform: translateX(0); }
+        .drawer-overlay.open { visibility: visible; opacity: 1; }
+        .profile-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #E5E7EB;
+        }
+        .avatar {
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .drawer-name { font-weight: 600; font-size: 18px; color: #1F2937; }
+        .drawer-email { font-size: 11px; color: #6B7280; margin-top: 4px; }
+        .drawer-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 0;
+            font-size: 15px;
+            font-weight: 500;
+            color: #4B5563;
+            cursor: pointer;
+            transition: 0.2s;
+            border-radius: 8px;
+        }
+        .drawer-item:hover { color: #3B82F6; background: #F3F4F6; padding-left: 8px; }
+        .drawer-item i { width: 24px; font-size: 18px; }
+        .drawer-logout { margin-top: auto; color: #EF4444; border-top: 1px solid #E5E7EB; padding-top: 20px; }
+
+        /* Tarjetas flotantes */
+        .waiting-card, .parked-card, .taken-card, .info-card {
+            position: fixed;
+            top: 80px;
+            left: 16px;
+            right: 16px;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            z-index: 150;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .waiting-card { border-left: 5px solid #F59E0B; text-align: center; }
+        .parked-card { border-left: 5px solid #3B82F6; }
+        .taken-card { border: 1px solid #F59E0B; }
+        .info-card { border: 1px solid #E5E7EB; }
+        .hidden { display: none; }
+        
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .flex-start { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .btn {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 12px;
+            font-size: 14px;
+            transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-danger { background: #EF4444; }
+        .btn-success { background: #10B981; }
+        .btn-warning { background: #F59E0B; }
+        .timer-box {
+            background: #1F2937;
+            color: white;
+            border-radius: 40px;
+            padding: 8px 20px;
+            font-family: monospace;
+            font-size: 28px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .small-avatar {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10B981, #059669);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #F59E0B;
+        }
+        .small-avatar i { font-size: 32px; color: white; }
+        
+        /* Animación de pulso */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Lista de ofertas */
+        .offers-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-height: 50vh;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            z-index: 150;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+        }
+        .offers-container.hidden {
+            transform: translateY(100%);
+        }
+        .offers-header {
+            padding: 16px;
+            border-bottom: 1px solid #E5E7EB;
+            position: sticky;
+            top: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+        }
+        .offer-card {
+            background: white;
+            margin: 12px 16px;
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #E5E7EB;
+        }
+        .offer-title {
+            font-weight: 600;
+            font-size: 18px;
+            color: #1F2937;
+        }
+        .offer-address {
+            font-size: 14px;
+            color: #6B7280;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .offer-expiry {
+            font-size: 12px;
+            color: #F59E0B;
+            margin-top: 8px;
+        }
+        
+        /* Botones flotantes */
+        .fab-park {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #3B82F6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 300;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 24px;
+            transition: transform 0.1s;
+        }
+        .fab-park:active { transform: scale(0.95); }
+        .fab-park.hidden { display: none; }
+        
+        .my-location-btn {
+            position: fixed;
+            bottom: 170px;
+            right: 20px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #1F2937;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 300;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-size: 20px;
+        }
+        
+        .power-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #3B82F6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 300;
+            border: none;
+            color: white;
+            font-size: 32px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+        .power-offline { background: #EF4444; }
+        .power-btn:active { transform: translateX(-50%) scale(0.95); }
+        .power-btn.disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        .online-badge {
+            position: fixed;
+            bottom: 105px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(16, 185, 129, 0.95);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 250;
+            white-space: nowrap;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+        }
+        .online-badge.hidden { display: none; }
+        
+        .map-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 14px;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .close-card {
+            cursor: pointer;
+            font-size: 20px;
+            color: #9CA3AF;
+            transition: color 0.2s;
+            padding: 5px;
+        }
+        .close-card:hover { color: #EF4444; }
+        
+        .text-muted {
+            font-size: 12px;
+            color: #6B7280;
+            margin-top: 8px;
+        }
+
+        /* Vista de vehículos */
+        .vehicles-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #F3F4F6;
+            z-index: 500;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+        .vehicles-view.open { transform: translateX(0); }
+        .vehicles-header {
+            background: white;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #E5E7EB;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .back-to-map {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #3B82F6;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .vehicles-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1F2937;
+        }
+        .add-vehicle-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #3B82F6;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .vehicles-content {
+            padding: 20px 16px;
+            padding-bottom: 100px;
+        }
+        .vehicle-card {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .vehicle-card.selected {
+            border-color: #10B981;
+            background: #F0FDF4;
+        }
+        .vehicle-card-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .vehicle-icon {
+            width: 50px;
+            height: 50px;
+            background: #EFF6FF;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #3B82F6;
+            font-size: 28px;
+        }
+        .vehicle-info {
+            flex: 1;
+        }
+        .vehicle-name {
+            font-weight: 600;
+            font-size: 18px;
+            color: #1F2937;
+        }
+        .vehicle-details {
+            font-size: 14px;
+            color: #6B7280;
+            margin-top: 4px;
+        }
+        .vehicle-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        .edit-btn { color: #10B981; }
+        .edit-btn:hover { background: #D1FAE5; }
+        .delete-btn { color: #EF4444; }
+        .delete-btn:hover { background: #FEE2E2; }
+        .selected-badge {
+            background: #10B981;
+            color: white;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9CA3AF;
+        }
+        .empty-state i { font-size: 64px; margin-bottom: 16px; }
+        .loading { text-align: center; padding: 40px; color: #9CA3AF; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.3s;
+        }
+        .modal-overlay.open {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 20px 20px 0 0;
+            padding: 24px 20px 32px;
+            transform: translateY(100%);
+            transition: transform 0.3s;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-overlay.open .modal-content { transform: translateY(0); }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        .modal-title { font-size: 20px; font-weight: 600; color: #1F2937; }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #9CA3AF;
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4B5563;
+            margin-bottom: 6px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+        .save-btn {
+            width: 100%;
+            padding: 14px;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div id="map"></div>
+    <div class="map-loading" id="mapLoading">📍 Solicitando tu ubicación...</div>
+
+    <!-- Header -->
+    <div class="app-header">
+        <button class="menu-btn" id="menuBtn"><i class="fas fa-bars"></i></button>
+        <div class="points-container">
+            <i class="fas fa-star"></i>
+            <span class="points-value" id="pointsValue">1250</span>
+        </div>
+    </div>
+
+    <!-- Drawer -->
+    <div id="drawerOverlay" class="drawer-overlay"></div>
+    <div id="drawer" class="drawer">
+        <div class="profile-row">
+            <div class="avatar" id="drawerAvatar">C</div>
+            <div>
+                <div class="drawer-name" id="drawerUserName">Carlos M.</div>
+                <div class="drawer-email" id="drawerEmail">usuario@parking.com</div>
+            </div>
+        </div>
+        <div class="drawer-item" data-nav="vehiculos"><i class="fas fa-car"></i> Vehículos</div>
+        <div class="drawer-item" data-nav="payment"><i class="fas fa-credit-card"></i> Método de pago</div>
+        <div class="drawer-item" data-nav="history"><i class="fas fa-history"></i> Historial</div>
+        <div class="drawer-item drawer-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Salir</div>
+    </div>
+
+    <!-- Tarjetas -->
+    <div id="waitingCard" class="waiting-card hidden">
+        <div class="flex-between">
+            <strong><i class="fas fa-hourglass-half"></i> Buscando conductor...</strong>
+            <i class="fas fa-times close-card" id="closeWaitingCard"></i>
+        </div>
+        <div class="timer-box" id="waitingTimer" style="margin: 15px auto;">03:00</div>
+        <p>Esperando que alguien tome tu espacio</p>
+        <p class="text-muted">Si nadie lo toma, el espacio quedará libre</p>
+        <button class="btn btn-danger" id="cancelWaitingBtn">Cancelar oferta</button>
+    </div>
+
+    <div id="parkedCard" class="parked-card hidden">
+        <div class="flex-between">
+            <strong><i class="fas fa-parking" style="color:#3B82F6;"></i> Estás estacionado aquí</strong>
+            <i class="fas fa-times close-card" id="closeParkedCard"></i>
+        </div>
+        <div class="flex-start">
+            <i class="fas fa-map-marker-alt" style="color:#3B82F6;"></i>
+            <span id="parkedAddress">Obteniendo dirección...</span>
+        </div>
+        <div class="flex-start">
+            <i class="fas fa-car"></i>
+            <span id="parkedVehicle">Tesla Model S</span>
+        </div>
+        <button class="btn btn-danger" id="leaveSpotBtn">🚗 Me voy - Liberar espacio</button>
+    </div>
+
+    <div id="takenCard" class="taken-card hidden">
+        <div class="flex-between">
+            <strong><i class="fas fa-exchange-alt" style="color:#F59E0B;"></i> ¡Alguien tomó tu espacio!</strong>
+            <i class="fas fa-times close-card" id="closeTakenCard"></i>
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px; margin-top: 15px;">
+            <div class="small-avatar"><i class="fas fa-car"></i></div>
+            <div>
+                <div id="takenVehicleModel" style="font-weight: 600; font-size: 18px;"></div>
+                <div id="takenVehicleDetails" style="font-size: 13px; color: #6B7280;"></div>
+                <div id="takenDriverName" style="font-size: 12px; color: #F59E0B; margin-top: 4px;"></div>
+            </div>
+        </div>
+        <div class="timer-box" id="takenTimer" style="margin: 15px auto;">05:00</div>
+        <button class="btn btn-success" id="completeParkingBtn">✅ Completar estacionamiento</button>
+    </div>
+
+    <div id="infoCard" class="info-card hidden">
+        <div id="cardContent"></div>
+    </div>
+
+    <!-- Contenedor de ofertas (estilo Flutter) -->
+    <div id="offersContainer" class="offers-container hidden">
+        <div class="offers-header">
+            <div class="flex-between">
+                <strong><i class="fas fa-parking"></i> Estacionamientos cercanos</strong>
+                <i class="fas fa-times close-card" id="closeOffersBtn"></i>
+            </div>
+        </div>
+        <div id="offersList"></div>
+    </div>
+
+    <!-- Botones flotantes -->
+    <div id="onlineBadge" class="online-badge hidden">
+        <i class="fas fa-circle" style="font-size: 8px; margin-right: 6px;"></i>
+        Buscando estacionamientos...
+    </div>
+
+    <button id="powerBtn" class="power-btn"><i id="powerIcon" class="fas fa-power-off"></i></button>
+    <button id="myLocationBtn" class="my-location-btn"><i class="fas fa-location-dot"></i></button>
+    <button id="fabParkBtn" class="fab-park"><i class="fas fa-parking"></i></button>
+
+    <!-- Vista de Vehículos -->
+    <div id="vehiclesView" class="vehicles-view">
+        <div class="vehicles-header">
+            <button class="back-to-map" id="backToMapBtn"><i class="fas fa-arrow-left"></i></button>
+            <span class="vehicles-title">Mis Vehículos</span>
+            <button class="add-vehicle-btn" id="addVehicleBtn"><i class="fas fa-plus"></i></button>
+        </div>
+        <div class="vehicles-content" id="vehiclesList">
+            <div class="loading">Cargando vehículos...</div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="vehicleModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="modalTitle">Agregar Vehículo</span>
+                <button class="close-modal" id="closeModalBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="vehicleForm">
+                <div class="form-group">
+                    <label class="form-label">Marca</label>
+                    <input type="text" class="form-input" id="brandInput" placeholder="Ej: Toyota, Honda, Tesla" maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Modelo / Año</label>
+                    <input type="text" class="form-input" id="modelInput" placeholder="Ej: 2020, Corolla" maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Color</label>
+                    <input type="text" class="form-input" id="colorInput" placeholder="Ej: Rojo, Azul, Blanco" maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Placa</label>
+                    <input type="text" class="form-input" id="plateInput" placeholder="Ej: ABC123" maxlength="10">
+                </div>
+                <button type="submit" class="save-btn">Guardar Vehículo</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== DATOS GLOBALES ==========
+    let currentUser = {
+        uid: "user_001",
+        displayName: "Carlos Martínez",
+        email: "carlos@parking.com",
+        points: 1250,
+        isParked: false,
+        isWaiting: false,
+        isOnline: false,
+        currentVehicle: "v1",
+        parkedLocation: null
+    };
+    
+    let vehicles = [
+        { id: "v1", brand: "Tesla", model: "Model S", color: "Rojo", plate: "ABC123" },
+        { id: "v2", brand: "Honda", model: "Civic 2022", color: "Gris", plate: "XYZ789" }
+    ];
+    
+    // Ofertas de estacionamiento disponibles (otros usuarios)
+    let availableSpots = [
+        {
+            id: "offer_1",
+            ownerId: "user_002",
+            ownerName: "María García",
+            status: "available",
+            address: "Av. Principal 123, Centro",
+            location: { lat: 40.7589, lng: -73.9851 },
+            offerExpiresAt: new Date(Date.now() + 15 * 60000),
+            createdAt: new Date()
+        },
+        {
+            id: "offer_2",
+            ownerId: "user_003",
+            ownerName: "Juan Pérez",
+            status: "available",
+            address: "Calle Secundaria 456, Zona Norte",
+            location: { lat: 40.7615, lng: -73.9828 },
+            offerExpiresAt: new Date(Date.now() + 12 * 60000),
+            createdAt: new Date()
+        },
+        {
+            id: "offer_3",
+            ownerId: "user_004",
+            ownerName: "Ana López",
+            status: "available",
+            address: "Boulevard Central 789",
+            location: { lat: 40.7550, lng: -73.9900 },
+            offerExpiresAt: new Date(Date.now() + 18 * 60000),
+            createdAt: new Date()
+        }
+    ];
+    
+    let waitingTimerInterval = null;
+    let takenTimerInterval = null;
+    let offersUpdateInterval = null;
+    
+    let map, userMarker, parkingMarker = null;
+    let currentPosition = null;
+    let currentAddress = "Obteniendo dirección...";
+    let locationReceived = false;
+    let locationCallbacks = [];
+    
+    // ========== VEHÍCULOS ==========
+    function saveVehiclesToLocal() {
+        localStorage.setItem("parking_vehicles", JSON.stringify(vehicles));
+        localStorage.setItem("current_vehicle", currentUser.currentVehicle);
+    }
+    
+    function loadVehiclesFromLocal() {
+        const stored = localStorage.getItem("parking_vehicles");
+        if(stored) {
+            vehicles = JSON.parse(stored);
+            const storedVehicle = localStorage.getItem("current_vehicle");
+            if(storedVehicle) currentUser.currentVehicle = storedVehicle;
+        }
+        renderVehicles();
+    }
+    
+    function escapeHtml(text) { 
+        if(!text) return ''; 
+        return text.replace(/[&<>]/g, function(m){
+            if(m==='&') return '&amp;'; 
+            if(m==='<') return '&lt;'; 
+            if(m==='>') return '&gt;'; 
+            return m;
+        }); 
+    }
+    
+    function renderVehicles() {
+        const container = document.getElementById("vehiclesList");
+        if(!container) return;
+        
+        if(vehicles.length === 0) {
+            container.innerHTML = `<div class="empty-state"><i class="fas fa-car"></i><p>No tienes vehículos registrados</p><p style="font-size: 12px;">Presiona + para agregar</p></div>`;
+            return;
+        }
+        
+        let html = '';
+        vehicles.forEach(vehicle => {
+            const isSelected = currentUser.currentVehicle === vehicle.id;
+            html += `
+                <div class="vehicle-card ${isSelected ? 'selected' : ''}" data-id="${vehicle.id}">
+                    <div class="vehicle-card-content">
+                        <div class="vehicle-icon"><i class="fas fa-car"></i></div>
+                        <div class="vehicle-info">
+                            <div class="vehicle-name">
+                                ${escapeHtml(vehicle.brand)} ${escapeHtml(vehicle.model)}
+                                ${isSelected ? '<span class="selected-badge"><i class="fas fa-check"></i> Principal</span>' : ''}
+                            </div>
+                            <div class="vehicle-details">${escapeHtml(vehicle.color)} • ${escapeHtml(vehicle.plate)}</div>
+                        </div>
+                        <div class="vehicle-actions">
+                            <button class="action-btn edit-btn" data-id="${vehicle.id}" data-action="edit"><i class="fas fa-pen"></i></button>
+                            <button class="action-btn delete-btn" data-id="${vehicle.id}" data-action="delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+        
+        document.querySelectorAll('.vehicle-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if(e.target.closest('.action-btn')) return;
+                currentUser.currentVehicle = card.dataset.id;
+                saveVehiclesToLocal();
+                renderVehicles();
+                showToast("Vehículo principal actualizado");
+                if(!document.getElementById("parkedCard").classList.contains("hidden")) {
+                    document.getElementById("parkedVehicle").innerText = getVehicleName();
+                }
+            });
+        });
+        
+        document.querySelectorAll('[data-action="edit"]').forEach(btn => {
+            btn.addEventListener('click', (e) => { e.stopPropagation(); openEditVehicleModal(btn.dataset.id); });
+        });
+        document.querySelectorAll('[data-action="delete"]').forEach(btn => {
+            btn.addEventListener('click', (e) => { e.stopPropagation(); deleteVehicle(btn.dataset.id); });
+        });
+    }
+    
+    function openAddVehicleModal() {
+        editingVehicleId = null;
+        document.getElementById("modalTitle").innerText = "Agregar Vehículo";
+        document.getElementById("brandInput").value = '';
+        document.getElementById("modelInput").value = '';
+        document.getElementById("colorInput").value = '';
+        document.getElementById("plateInput").value = '';
+        document.getElementById("vehicleModal").classList.add("open");
+    }
+    
+    let editingVehicleId = null;
+    function openEditVehicleModal(id) {
+        const vehicle = vehicles.find(v => v.id === id);
+        if(!vehicle) return;
+        editingVehicleId = id;
+        document.getElementById("modalTitle").innerText = "Editar Vehículo";
+        document.getElementById("brandInput").value = vehicle.brand;
+        document.getElementById("modelInput").value = vehicle.model;
+        document.getElementById("colorInput").value = vehicle.color;
+        document.getElementById("plateInput").value = vehicle.plate;
+        document.getElementById("vehicleModal").classList.add("open");
+    }
+    
+    function saveVehicle(event) {
+        event.preventDefault();
+        const brand = document.getElementById("brandInput").value.trim();
+        const model = document.getElementById("modelInput").value.trim();
+        const color = document.getElementById("colorInput").value.trim();
+        const plate = document.getElementById("plateInput").value.trim();
+        if(!brand || !model || !color || !plate) { showToast("Completa todos los campos"); return; }
+        
+        if(editingVehicleId) {
+            const index = vehicles.findIndex(v => v.id === editingVehicleId);
+            if(index !== -1) { vehicles[index] = { ...vehicles[index], brand, model, color, plate }; showToast("Vehículo actualizado"); }
+        } else {
+            const newId = Date.now().toString();
+            vehicles.push({ id: newId, brand, model, color, plate });
+            if(vehicles.length === 1) currentUser.currentVehicle = newId;
+            showToast("Vehículo agregado");
+        }
+        saveVehiclesToLocal();
+        closeVehicleModal();
+        renderVehicles();
+    }
+    
+    function deleteVehicle(id) {
+        if(vehicles.length === 1) { showToast("No puedes eliminar el único vehículo"); return; }
+        if(confirm("¿Eliminar este vehículo?")) {
+            vehicles = vehicles.filter(v => v.id !== id);
+            if(currentUser.currentVehicle === id && vehicles.length > 0) currentUser.currentVehicle = vehicles[0].id;
+            saveVehiclesToLocal();
+            renderVehicles();
+            showToast("Vehículo eliminado");
+        }
+    }
+    
+    function closeVehicleModal() { document.getElementById("vehicleModal").classList.remove("open"); editingVehicleId = null; }
+    
+    function showToast(msg) {
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#1F2937;color:white;padding:10px 20px;border-radius:40px;z-index:2000;font-size:14px;white-space:nowrap;';
+        toast.innerText = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    }
+    
+    // ========== OFERTAS ==========
+    function renderOffers() {
+        const container = document.getElementById("offersList");
+        if(!container) return;
+        
+        // Filtrar ofertas disponibles (no expiradas)
+        const now = new Date();
+        const activeOffers = availableSpots.filter(spot => {
+            return spot.status === "available" && new Date(spot.offerExpiresAt) > now;
+        });
+        
+        if(activeOffers.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state" style="padding: 40px;">
+                    <i class="fas fa-search"></i>
+                    <p>No hay estacionamientos disponibles cerca</p>
+                    <p class="text-muted">Vuelve a intentar más tarde</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        activeOffers.forEach((offer, index) => {
+            const minsLeft = Math.max(0, Math.floor((new Date(offer.offerExpiresAt) - now) / 60000));
+            const timeAgo = "Hace un momento";
+            
+            html += `
+                <div class="offer-card" data-offer-id="${offer.id}">
+                    <div class="offer-title">🅿️ Espacio disponible</div>
+                    <div class="offer-address">
+                        <i class="fas fa-map-marker-alt" style="color:#3B82F6;"></i>
+                        <span>${escapeHtml(offer.address)}</span>
+                    </div>
+                    <div class="offer-expiry">
+                        <i class="fas fa-clock"></i> Expira en ${minsLeft} minutos
+                    </div>
+                    <button class="btn accept-offer-btn" data-offer-idx="${index}" style="margin-top: 12px;">✅ Aceptar estacionamiento</button>
+                    <div class="text-muted" style="margin-top: 12px; text-align: center;">${timeAgo}</div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+        
+        // Eventos de aceptar oferta
+        document.querySelectorAll('.accept-offer-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(btn.dataset.offerIdx);
+                const offer = activeOffers[idx];
+                if(offer) acceptOffer(offer);
+            });
+        });
+    }
+    
+    function acceptOffer(offer) {
+        if(!currentUser.isOnline) {
+            showToast("❌ Activa el modo ONLINE primero");
+            return;
+        }
+        if(currentUser.isParked) {
+            showToast("❌ No puedes aceptar ofertas mientras estás estacionado");
+            return;
+        }
+        
+        // Marcar la oferta como tomada
+        const spotIndex = availableSpots.findIndex(s => s.id === offer.id);
+        if(spotIndex !== -1) {
+            availableSpots[spotIndex].status = "taken";
+            availableSpots[spotIndex].takenBy = currentUser.uid;
+            availableSpots[spotIndex].takenByName = currentUser.displayName;
+            availableSpots[spotIndex].vehicleId = currentUser.currentVehicle;
+        }
+        
+        currentUser.isOnline = false;
+        
+        // Mostrar timer de 5 minutos para llegar
+        showDriverTimer(offer);
+        
+        renderOffers();
+        updateUI();
+        
+        // Si no hay ofertas, cerrar el contenedor
+        const activeOffers = availableSpots.filter(s => s.status === "available" && new Date(s.offerExpiresAt) > new Date());
+        if(activeOffers.length === 0) {
+            document.getElementById("offersContainer").classList.add("hidden");
+        }
+    }
+    
+    function showDriverTimer(offer) {
+        let remaining = 300;
+        
+        const updateTimer = () => {
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            const timerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+            
+            const timerDiv = document.getElementById("driverTimer");
+            if(timerDiv) timerDiv.innerText = timerText;
+            
+            if(remaining <= 0) {
+                clearInterval(window.driverInterval);
+                document.getElementById("infoCard").classList.add("hidden");
+                showToast("⏰ Tiempo agotado para llegar al estacionamiento");
+            }
+            remaining--;
+        };
+        
+        document.getElementById("cardContent").innerHTML = `
+            <div style="text-align:center">
+                <div class="timer-box" id="driverTimer" style="margin: 0 auto 15px auto;">05:00</div>
+                <div style="margin-bottom: 10px;"><strong>⏰ Tiempo para llegar</strong></div>
+                <p style="font-size:14px; margin-bottom: 15px;">${escapeHtml(offer.address)}</p>
+                <button class="btn btn-success" id="parkFinalBtn">📍 Estacionar ahora</button>
+            </div>
+        `;
+        
+        const driverInterval = setInterval(updateTimer, 1000);
+        window.driverInterval = driverInterval;
+        updateTimer();
+        
+        document.getElementById("infoCard").classList.remove("hidden");
+        
+        document.getElementById("parkFinalBtn")?.addEventListener("click", () => {
+            clearInterval(driverInterval);
+            finalizePark(offer);
+        });
+    }
+    
+    function finalizePark(offer) {
+        // Encontrar el spot y marcarlo como estacionado
+        const spotIndex = availableSpots.findIndex(s => s.id === offer.id);
+        if(spotIndex !== -1) {
+            availableSpots[spotIndex].status = "parked";
+            availableSpots[spotIndex].ownerId = currentUser.uid;
+            availableSpots[spotIndex].ownerName = currentUser.displayName;
+            availableSpots[spotIndex].takenBy = null;
+        }
+        
+        currentUser.isParked = true;
+        currentUser.isOnline = false;
+        
+        // Agregar marcador en el mapa en la ubicación de la oferta
+        if(offer.location) {
+            addParkingMarker(offer.location.lat, offer.location.lng, offer.address);
+            document.getElementById("parkedAddress").innerText = offer.address;
+        } else if(currentPosition) {
+            addParkingMarker(currentPosition.lat, currentPosition.lng, currentAddress);
+            document.getElementById("parkedAddress").innerText = currentAddress;
+        }
+        
+        document.getElementById("parkedVehicle").innerText = getVehicleName();
+        document.getElementById("parkedCard").classList.remove("hidden");
+        document.getElementById("infoCard").classList.add("hidden");
+        
+        updateUI();
+        showToast("✅ Ahora estás estacionado en el lugar aceptado");
+    }
+    
+    // ========== MAPA ==========
+    function initMap() {
+        map = L.map('map', { zoomControl: false }).setView([40.7580, -73.9855], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { 
+            attribution: '&copy; OSM', 
+            subdomains: 'abcd', 
+            maxZoom: 19 
+        }).addTo(map);
+        
+        const userIcon = L.divIcon({ 
+            html: '<div style="background:#3B82F6;width:22px;height:22px;border-radius:50%;border:3px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>', 
+            iconSize: [22, 22] 
+        });
+        userMarker = L.marker([40.7580, -73.9855], { icon: userIcon }).addTo(map);
+        
+        if(navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    currentPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    console.log("📍 Ubicación REAL obtenida:", currentPosition.lat, currentPosition.lng);
+                    
+                    map.setView([currentPosition.lat, currentPosition.lng], 17);
+                    userMarker.setLatLng([currentPosition.lat, currentPosition.lng]);
+                    
+                    obtenerDireccion(currentPosition.lat, currentPosition.lng, (direccion) => {
+                        currentAddress = direccion;
+                        document.getElementById("mapLoading").style.display = "none";
+                        showToast(`📍 Ubicación detectada: ${currentAddress.substring(0, 35)}...`);
+                    });
+                    
+                    locationReceived = true;
+                    locationCallbacks.forEach(cb => cb(currentPosition));
+                    locationCallbacks = [];
+                },
+                (error) => {
+                    console.error("Error de geolocalización:", error);
+                    document.getElementById("mapLoading").style.display = "none";
+                    let errorMsg = "⚠️ No se pudo obtener tu ubicación. Usando ubicación de ejemplo.";
+                    if(error.code === 1) errorMsg = "⚠️ Permiso denegado. Activa la ubicación en tu navegador.";
+                    showToast(errorMsg);
+                    currentPosition = { lat: 40.7580, lng: -73.9855 };
+                    currentAddress = "Times Square, Nueva York (Ejemplo)";
+                    locationReceived = true;
+                    locationCallbacks.forEach(cb => cb(currentPosition));
+                    locationCallbacks = [];
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        } else {
+            document.getElementById("mapLoading").style.display = "none";
+            showToast("⚠️ Tu navegador no soporta geolocalización");
+            currentPosition = { lat: 40.7580, lng: -73.9855 };
+            currentAddress = "Times Square, Nueva York (Ejemplo)";
+            locationReceived = true;
+        }
+    }
+    
+    function obtenerDireccion(lat, lng, callback) {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
+            .then(response => response.json())
+            .then(data => {
+                if(data.display_name) {
+                    const direccion = data.display_name.split(',')[0] + ', ' + data.display_name.split(',')[1];
+                    if(callback) callback(direccion);
+                } else if(callback) {
+                    callback(`📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+                }
+            })
+            .catch(() => {
+                if(callback) callback(`📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+            });
+    }
+    
+    function getVehicleName() {
+        const v = vehicles.find(v => v.id === currentUser.currentVehicle);
+        return v ? `${v.brand} ${v.model}` : "Mi vehículo";
+    }
+    
+    function addParkingMarker(lat, lng, address) {
+        if(parkingMarker) {
+            map.removeLayer(parkingMarker);
+        }
+        
+        const parkingIcon = L.divIcon({
+            html: `<div style="background:#3B82F6;width:45px;height:45px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);animation:pulse 1.5s infinite;">
+                        <i class="fas fa-parking" style="color:white;font-size:22px;"></i>
+                   </div>`,
+            iconSize: [45, 45],
+            className: 'parking-marker-pulse'
+        });
+        
+        parkingMarker = L.marker([lat, lng], { icon: parkingIcon }).addTo(map);
+        parkingMarker.bindTooltip('🚗 Tu vehículo está estacionado aquí', { permanent: false, direction: 'top' });
+        map.setView([lat, lng], 17);
+        console.log("📍 Marcador de estacionamiento agregado en:", lat, lng);
+    }
+    
+    function removeParkingMarker() {
+        if(parkingMarker) {
+            map.removeLayer(parkingMarker);
+            parkingMarker = null;
+        }
+    }
+    
+    // ========== LÓGICA PRINCIPAL ==========
+    function updateUI() {
+        document.getElementById("pointsValue").innerText = currentUser.points;
+        document.getElementById("drawerUserName").innerText = currentUser.displayName;
+        document.getElementById("drawerAvatar").innerText = currentUser.displayName.charAt(0);
+        
+        const isBusy = currentUser.isParked || currentUser.isWaiting;
+        const powerBtn = document.getElementById("powerBtn");
+        const onlineBadge = document.getElementById("onlineBadge");
+        const fabParkBtn = document.getElementById("fabParkBtn");
+        const offersContainer = document.getElementById("offersContainer");
+        
+        if(isBusy) {
+            powerBtn.classList.add("disabled");
+            onlineBadge.classList.add("hidden");
+            if(currentUser.isOnline) currentUser.isOnline = false;
+            offersContainer.classList.add("hidden");
+            if(offersUpdateInterval) {
+                clearInterval(offersUpdateInterval);
+                offersUpdateInterval = null;
+            }
+        } else {
+            powerBtn.classList.remove("disabled");
+        }
+        
+        if(currentUser.isParked || currentUser.isWaiting) {
+            fabParkBtn.classList.add("hidden");
+        } else {
+            fabParkBtn.classList.remove("hidden");
+        }
+        
+        if(currentUser.isOnline && !isBusy) {
+            powerBtn.classList.add("power-offline");
+            document.getElementById("powerIcon").className = "fas fa-times";
+            onlineBadge.classList.remove("hidden");
+            
+            // Mostrar ofertas y actualizar cada 5 segundos
+            offersContainer.classList.remove("hidden");
+            renderOffers();
+            if(!offersUpdateInterval) {
+                offersUpdateInterval = setInterval(() => {
+                    if(currentUser.isOnline && !currentUser.isParked && !currentUser.isWaiting) {
+                        renderOffers();
+                    }
+                }, 5000);
+            }
+        } else {
+            powerBtn.classList.remove("power-offline");
+            document.getElementById("powerIcon").className = "fas fa-power-off";
+            onlineBadge.classList.add("hidden");
+            offersContainer.classList.add("hidden");
+            if(offersUpdateInterval) {
+                clearInterval(offersUpdateInterval);
+                offersUpdateInterval = null;
+            }
+        }
+    }
+    
+    function waitForLocation(callback) {
+        if(locationReceived && currentPosition) {
+            callback(currentPosition);
+        } else {
+            locationCallbacks.push(callback);
+        }
+    }
+    
+    function parkHere() {
+        if(currentUser.isParked) { 
+            showToast("Ya estás estacionado"); 
+            return; 
+        }
+        if(currentUser.isWaiting) { 
+            showToast("Ya tienes una oferta activa"); 
+            return; 
+        }
+        
+        waitForLocation((pos) => {
+            console.log("📍 Estacionando en ubicación REAL:", pos.lat, pos.lng);
+            
+            currentUser.parkedLocation = { lat: pos.lat, lng: pos.lng };
+            
+            addParkingMarker(pos.lat, pos.lng, currentAddress);
+            
+            currentUser.isParked = true;
+            currentUser.isOnline = false;
+            currentUser.isWaiting = false;
+            
+            obtenerDireccion(pos.lat, pos.lng, (direccion) => {
+                document.getElementById("parkedAddress").innerText = direccion;
+            });
+            
+            document.getElementById("parkedVehicle").innerText = getVehicleName();
+            document.getElementById("parkedCard").classList.remove("hidden");
+            document.getElementById("waitingCard").classList.add("hidden");
+            document.getElementById("takenCard").classList.add("hidden");
+            
+            updateUI();
+            showToast("✅ Vehículo estacionado correctamente en tu ubicación actual");
+        });
+    }
+    
+    function leaveSpot() {
+        if(!currentUser.isParked) return;
+        
+        removeParkingMarker();
+        
+        currentUser.isParked = false;
+        currentUser.isWaiting = true;
+        currentUser.isOnline = false;
+        currentUser.parkedLocation = null;
+        
+        document.getElementById("parkedCard").classList.add("hidden");
+        document.getElementById("waitingCard").classList.remove("hidden");
+        
+        updateUI();
+        showToast("🕒 Espacio liberado. Esperando conductor por 3 minutos...");
+        
+        startWaitingTimer();
+        
+        const timerId = setTimeout(() => {
+            if(currentUser.isWaiting) {
+                if(waitingTimerInterval) clearInterval(waitingTimerInterval);
+                waitingTimerInterval = null;
+                
+                currentUser.isWaiting = false;
+                document.getElementById("waitingCard").classList.add("hidden");
+                document.getElementById("takenCard").classList.remove("hidden");
+                
+                // Simular info del conductor que tomó el espacio
+                document.getElementById("takenVehicleModel").innerText = "Honda Civic";
+                document.getElementById("takenVehicleDetails").innerText = "Gris • XYZ789";
+                document.getElementById("takenDriverName").innerHTML = '<i class="fas fa-user"></i> Ana Rodríguez está en camino';
+                
+                updateUI();
+                startTakenTimer();
+                showToast("🚗 ¡Alguien ha tomado tu oferta! Tiene 5 minutos para llegar.");
+            }
+        }, 5000);
+        
+        window.pendingOfferTimeout = timerId;
+    }
+    
+    function startWaitingTimer() {
+        if(waitingTimerInterval) clearInterval(waitingTimerInterval);
+        let remaining = 180;
+        const timerEl = document.getElementById("waitingTimer");
+        const update = () => {
+            const mins = Math.floor(remaining/60), secs = remaining%60;
+            timerEl.innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+            if(remaining <= 0) {
+                clearInterval(waitingTimerInterval);
+                waitingTimerInterval = null;
+                if(currentUser.isWaiting) {
+                    currentUser.isWaiting = false;
+                    document.getElementById("waitingCard").classList.add("hidden");
+                    updateUI();
+                    showToast("⏰ Nadie tomó tu oferta. El espacio ha sido liberado.");
+                    if(window.pendingOfferTimeout) clearTimeout(window.pendingOfferTimeout);
+                }
+            }
+            remaining--;
+        };
+        update();
+        waitingTimerInterval = setInterval(update, 1000);
+    }
+    
+    function startTakenTimer() {
+        if(takenTimerInterval) clearInterval(takenTimerInterval);
+        let remaining = 300;
+        const timerEl = document.getElementById("takenTimer");
+        const update = () => {
+            const mins = Math.floor(remaining/60), secs = remaining%60;
+            timerEl.innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+            if(remaining <= 0) {
+                clearInterval(takenTimerInterval);
+                takenTimerInterval = null;
+                document.getElementById("takenCard").classList.add("hidden");
+                showToast("⏰ El conductor no llegó a tiempo. La oferta ha sido cancelada.");
+            }
+            remaining--;
+        };
+        update();
+        takenTimerInterval = setInterval(update, 1000);
+    }
+    
+    function completeParking() {
+        if(takenTimerInterval) clearInterval(takenTimerInterval);
+        takenTimerInterval = null;
+        document.getElementById("takenCard").classList.add("hidden");
+        showToast("✅ Estacionamiento completado. ¡Gracias por compartir tu espacio!");
+    }
+    
+    function toggleOnline() {
+        if(currentUser.isParked) {
+            showToast("❌ No puedes activar ONLINE mientras estás estacionado. Libera tu espacio primero.");
+            return;
+        }
+        if(currentUser.isWaiting) {
+            showToast("❌ No puedes activar ONLINE mientras estás ofertando un estacionamiento. Cancela la oferta primero.");
+            return;
+        }
+        
+        currentUser.isOnline = !currentUser.isOnline;
+        updateUI();
+        showToast(currentUser.isOnline ? "✅ Modo ONLINE activado - Buscando estacionamientos" : "Modo OFFLINE");
+    }
+    
+    function cancelWaitingOffer() {
+        if(waitingTimerInterval) clearInterval(waitingTimerInterval);
+        waitingTimerInterval = null;
+        if(window.pendingOfferTimeout) clearTimeout(window.pendingOfferTimeout);
+        
+        currentUser.isWaiting = false;
+        document.getElementById("waitingCard").classList.add("hidden");
+        updateUI();
+        showToast("Oferta cancelada");
+    }
+    
+    function centerOnUser() { 
+        if(currentPosition) {
+            map.setView([currentPosition.lat, currentPosition.lng], 17);
+            userMarker.setLatLng([currentPosition.lat, currentPosition.lng]);
+            showToast("📍 Centrando en tu ubicación");
+        } else {
+            showToast("Obteniendo tu ubicación...");
+        }
+    }
+    
+    function deleteParkingOnClose() {
+        if(currentUser.isParked) {
+            if(waitingTimerInterval) clearInterval(waitingTimerInterval);
+            if(takenTimerInterval) clearInterval(takenTimerInterval);
+            if(window.pendingOfferTimeout) clearTimeout(window.pendingOfferTimeout);
+            
+            removeParkingMarker();
+            
+            currentUser.isParked = false;
+            currentUser.isWaiting = false;
+            currentUser.parkedLocation = null;
+            document.getElementById("parkedCard").classList.add("hidden");
+            document.getElementById("waitingCard").classList.add("hidden");
+            document.getElementById("takenCard").classList.add("hidden");
+            updateUI();
+            showToast("Estacionamiento eliminado");
+        }
+    }
+    
+    function deleteTakenOnClose() {
+        if(takenTimerInterval) clearInterval(takenTimerInterval);
+        takenTimerInterval = null;
+        document.getElementById("takenCard").classList.add("hidden");
+        showToast("Oferta eliminada");
+    }
+    
+    function showMapView() { 
+        document.getElementById("vehiclesView").classList.remove("open"); 
+    }
+    function showVehiclesView() { 
+        document.getElementById("vehiclesView").classList.add("open"); 
+        renderVehicles(); 
+    }
+    
+    // Inicialización
+    initMap();
+    loadVehiclesFromLocal();
+    updateUI();
+    
+    // Eventos
+    document.getElementById("menuBtn").onclick = () => { document.getElementById("drawer").classList.add("open"); document.getElementById("drawerOverlay").classList.add("open"); };
+    document.getElementById("drawerOverlay").onclick = () => { document.getElementById("drawer").classList.remove("open"); document.getElementById("drawerOverlay").classList.remove("open"); };
+    document.getElementById("backToMapBtn").onclick = showMapView;
+    document.getElementById("addVehicleBtn").onclick = openAddVehicleModal;
+    document.getElementById("closeModalBtn").onclick = closeVehicleModal;
+    document.getElementById("vehicleModal").onclick = (e) => { if(e.target === document.getElementById("vehicleModal")) closeVehicleModal(); };
+    document.getElementById("vehicleForm").onsubmit = saveVehicle;
+    document.getElementById("fabParkBtn").onclick = parkHere;
+    document.getElementById("powerBtn").onclick = toggleOnline;
+    document.getElementById("myLocationBtn").onclick = centerOnUser;
+    document.getElementById("leaveSpotBtn").onclick = leaveSpot;
+    document.getElementById("closeParkedCard").onclick = deleteParkingOnClose;
+    document.getElementById("closeWaitingCard").onclick = cancelWaitingOffer;
+    document.getElementById("cancelWaitingBtn").onclick = cancelWaitingOffer;
+    document.getElementById("closeTakenCard").onclick = deleteTakenOnClose;
+    document.getElementById("completeParkingBtn").onclick = completeParking;
+    document.getElementById("closeOffersBtn").onclick = () => { document.getElementById("offersContainer").classList.add("hidden"); };
+    document.getElementById("logoutBtn").onclick = () => { if(confirm("Reiniciar demo?")) { location.reload(); } };
+    
+    document.querySelectorAll("[data-nav]").forEach(el => {
+        el.addEventListener("click", () => {
+            if(el.dataset.nav === "vehiculos") { showVehiclesView(); }
+            else { alert(`📱 Pantalla de ${el.innerText} en desarrollo`); }
+            document.getElementById("drawer").classList.remove("open");
+            document.getElementById("drawerOverlay").classList.remove("open");
+        });
+    });
+</script>
+</body>
+</html>
