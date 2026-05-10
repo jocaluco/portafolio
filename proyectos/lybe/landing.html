@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Lybe - Conductor encontrado</title>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lybe">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="theme-color" content="#007AFF">
+<meta name="mobile-web-app-capable" content="yes">
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --primary: #007AFF;
+  --primary-dark: #0056CC;
+  --primary-light: #E3F2FF;
+  --success: #10B981;
+  --success-light: #D1FAE5;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --danger-light: #FEE2E2;
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --white: #FFFFFF;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+}
+
+body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+
+.container { max-width: 450px; width: 100%; background: white; border-radius: 32px; overflow: hidden; box-shadow: 0 20px 35px -10px rgba(0,0,0,0.3); animation: fadeIn 0.5s ease; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+.header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 32px; text-align: center; color: white; }
+.logo { width: 70px; height: 70px; background: rgba(255,255,255,0.2); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 32px; font-weight: 800; }
+.header h1 { font-size: 24px; margin-bottom: 4px; }
+.header p { font-size: 13px; opacity: 0.8; }
+
+.content { padding: 28px; }
+
+.driver-card { background: var(--gray-50); border-radius: 24px; padding: 24px; margin-bottom: 24px; text-align: center; border: 1px solid var(--gray-200); }
+.driver-avatar { width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 48px; font-weight: 700; color: white; overflow: hidden; }
+.driver-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.driver-name { font-size: 24px; font-weight: 800; color: var(--gray-800); margin-bottom: 4px; }
+.driver-vehicle { font-size: 14px; color: var(--gray-500); margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.driver-stats { display: flex; justify-content: center; gap: 24px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--gray-200); }
+.driver-stat { text-align: center; }
+.driver-stat-value { font-size: 20px; font-weight: 800; color: var(--primary); }
+.driver-stat-label { font-size: 11px; color: var(--gray-500); }
+.driver-rating { display: inline-flex; align-items: center; gap: 4px; background: var(--warning); padding: 4px 12px; border-radius: 30px; color: white; font-size: 13px; font-weight: 600; margin-top: 12px; }
+
+.btn-primary { width: 100%; padding: 16px; background: var(--success); border: none; border-radius: 16px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.btn-primary:hover { background: #0a9c6e; transform: translateY(-1px); }
+
+.btn-secondary { width: 100%; padding: 14px; background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 16px; color: var(--gray-700); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-secondary:hover { background: var(--gray-200); }
+
+.btn-install { width: 100%; padding: 14px; background: var(--primary); border: none; border-radius: 16px; color: white; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 16px; }
+.btn-install:hover { background: var(--primary-dark); }
+
+.divider { display: flex; align-items: center; margin: 20px 0; color: var(--gray-400); font-size: 12px; }
+.divider-line { flex: 1; height: 1px; background: var(--gray-200); }
+.divider-text { padding: 0 12px; }
+
+.loading { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 40px; }
+.spinner { width: 30px; height: 30px; border: 3px solid var(--gray-200); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error-box { background: var(--danger-light); border-radius: 16px; padding: 20px; text-align: center; color: var(--danger); }
+.error-box svg { margin-bottom: 12px; }
+.success-box { background: var(--success-light); border-radius: 16px; padding: 16px; text-align: center; color: var(--success); display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; }
+
+.install-banner { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 16px; margin-top: 20px; color: white; text-align: center; }
+.install-banner small { opacity: 0.8; font-size: 11px; }
+
+.toast { position: fixed; bottom: 30px; left: 20px; right: 20px; background: var(--gray-800); color: white; padding: 12px 20px; border-radius: 30px; font-size: 13px; text-align: center; opacity: 0; transition: opacity 0.3s; z-index: 1100; pointer-events: none; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="container" id="app">
+  <div class="header">
+    <div class="logo">LY</div>
+    <h1>Lybe</h1>
+    <p>Plataforma de transporte</p>
+  </div>
+  
+  <div class="content" id="content">
+    <div class="loading">
+      <div class="spinner"></div>
+      <span>Cargando información del conductor...</span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBEcOpOAFuBkHsD46OnTBRvjUONTkbxDQ8",
+  authDomain: "lybe-driver-app.firebaseapp.com",
+  projectId: "lybe-driver-app",
+  storageBucket: "lybe-driver-app.firebasestorage.app",
+  messagingSenderId: "536788488637",
+  appId: "1:536788488637:web:46452007a6fbcb563c42d4"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Obtener parámetros de la URL
+const urlParams = new URLSearchParams(window.location.search);
+const driverIdParam = urlParams.get('driverId');
+const driverCodeParam = urlParams.get('code');
+
+let driverData = null;
+let driverId = null;
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+async function loadDriverInfo() {
+  const contentDiv = document.getElementById('content');
+  
+  try {
+    let driverDoc = null;
+    
+    // Buscar por ID
+    if(driverIdParam) {
+      driverDoc = await db.collection('drivers').doc(driverIdParam).get();
+      if(driverDoc.exists) driverId = driverIdParam;
+    }
+    
+    // Buscar por código
+    if((!driverDoc || !driverDoc.exists) && driverCodeParam) {
+      const query = await db.collection('drivers').where('driverCode', '==', driverCodeParam.toUpperCase()).get();
+      if(!query.empty) {
+        driverDoc = query.docs[0];
+        driverId = driverDoc.id;
+      }
+    }
+    
+    if(!driverDoc || !driverDoc.exists) {
+      contentDiv.innerHTML = `
+        <div class="error-box">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <h3>Conductor no encontrado</h3>
+          <p style="margin-top:8px">El código QR escaneado no corresponde a un conductor registrado.</p>
+        </div>
+        <button class="btn-secondary" onclick="window.location.href='/lybe-passenger.html'">Ir a la app</button>
+      `;
+      return;
+    }
+    
+    driverData = driverDoc.data();
+    const ratingStars = '⭐'.repeat(Math.floor(driverData.rating || 0));
+    const ratingValue = (driverData.rating || 0).toFixed(1);
+    
+    // Verificar si el usuario ya está logueado
+    const user = auth.currentUser;
+    
+    if(user) {
+      // Usuario logueado, verificar si ya tiene este conductor
+      const passengerDoc = await db.collection('passengers').doc(user.uid).get();
+      const savedDrivers = passengerDoc.data()?.savedDrivers || [];
+      const isAlreadySaved = savedDrivers.includes(driverId);
+      
+      contentDiv.innerHTML = `
+        <div class="driver-card">
+          <div class="driver-avatar">
+            ${driverData.profileImageUrl ? `<img src="${driverData.profileImageUrl}">` : (driverData.name?.charAt(0) || 'D')}
+          </div>
+          <div class="driver-name">${driverData.name || 'Conductor'}</div>
+          <div class="driver-vehicle">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="12" rx="2"/>
+              <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
+            </svg>
+            ${driverData.vehicleModel || 'Vehículo'} · ${driverData.licensePlate || driverData.plate || 'Sin placa'}
+          </div>
+          <div class="driver-rating">${ratingStars} ${ratingValue !== '0.0' ? ratingValue : 'Nuevo'}</div>
+          <div class="driver-stats">
+            <div class="driver-stat">
+              <div class="driver-stat-value">${driverData.totalTrips || 0}</div>
+              <div class="driver-stat-label">Viajes</div>
+            </div>
+            <div class="driver-stat">
+              <div class="driver-stat-value">${driverData.rating || 'Nuevo'}</div>
+              <div class="driver-stat-label">Rating</div>
+            </div>
+            <div class="driver-stat">
+              <div class="driver-stat-value">${driverData.driverCode ? driverData.driverCode.slice(-6) : 'N/A'}</div>
+              <div class="driver-stat-label">Código</div>
+            </div>
+          </div>
+        </div>
+        ${isAlreadySaved ? 
+          '<div class="success-box"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Conductor ya está en tu lista</div>' : 
+          '<button class="btn-primary" onclick="addDriverToAccount()">➕ Agregar a mis conductores</button>'
+        }
+        <button class="btn-secondary" onclick="window.location.href=\'/lybe-passenger.html\'">Abrir la app</button>
+        <div class="install-banner" id="installBanner" style="display:none">
+          <small>📱 Instala Lybe en tu teléfono para una mejor experiencia</small>
+        </div>
+      `;
+      
+      // Mostrar banner de instalación si la PWA no está instalada
+      if (!window.matchMedia('(display-mode: standalone)').matches) {
+        document.getElementById('installBanner').style.display = 'block';
+      }
+      
+    } else {
+      // Usuario no logueado
+      contentDiv.innerHTML = `
+        <div class="driver-card">
+          <div class="driver-avatar">
+            ${driverData.profileImageUrl ? `<img src="${driverData.profileImageUrl}">` : (driverData.name?.charAt(0) || 'D')}
+          </div>
+          <div class="driver-name">${driverData.name || 'Conductor'}</div>
+          <div class="driver-vehicle">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="12" rx="2"/>
+              <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
+            </svg>
+            ${driverData.vehicleModel || 'Vehículo'} · ${driverData.licensePlate || driverData.plate || 'Sin placa'}
+          </div>
+          <div class="driver-rating">${ratingStars} ${ratingValue !== '0.0' ? ratingValue : 'Nuevo'}</div>
+          <div class="driver-stats">
+            <div class="driver-stat">
+              <div class="driver-stat-value">${driverData.totalTrips || 0}</div>
+              <div class="driver-stat-label">Viajes</div>
+            </div>
+            <div class="driver-stat">
+              <div class="driver-stat-value">${driverData.rating || 'Nuevo'}</div>
+              <div class="driver-stat-label">Rating</div>
+            </div>
+            <div class="driver-stat">
+              <div class="driver-stat-value">${driverData.driverCode ? driverData.driverCode.slice(-6) : 'N/A'}</div>
+              <div class="driver-stat-label">Código</div>
+            </div>
+          </div>
+        </div>
+        <p style="text-align:center;margin-bottom:20px;color:var(--gray-600);font-size:14px;">
+          Para agregar a este conductor, necesitas tener una cuenta en Lybe.
+        </p>
+        <button class="btn-primary" onclick="redirectToLogin()">🔐 Iniciar sesión</button>
+        <div class="divider"><div class="divider-line"></div><span class="divider-text">O</span><div class="divider-line"></div></div>
+        <button class="btn-secondary" onclick="redirectToRegister()">📝 Crear cuenta nueva</button>
+        <div class="install-banner" id="installBanner" style="display:none">
+          <small>📱 Instala Lybe en tu teléfono para una mejor experiencia</small>
+        </div>
+      `;
+      
+      if (!window.matchMedia('(display-mode: standalone)').matches) {
+        document.getElementById('installBanner').style.display = 'block';
+      }
+    }
+    
+  } catch(e) {
+    console.error(e);
+    contentDiv.innerHTML = `
+      <div class="error-box">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <h3>Error al cargar</h3>
+        <p style="margin-top:8px">${e.message}</p>
+      </div>
+    `;
+  }
+}
+
+async function addDriverToAccount() {
+  const user = auth.currentUser;
+  if(!user) {
+    redirectToLogin();
+    return;
+  }
+  
+  const contentDiv = document.getElementById('content');
+  contentDiv.innerHTML = `<div class="loading"><div class="spinner"></div><span>Agregando conductor...</span></div>`;
+  
+  try {
+    const pasRef = db.collection('passengers').doc(user.uid);
+    const pasDoc = await pasRef.get();
+    const current = pasDoc.data()?.savedDrivers || [];
+    
+    if(!current.includes(driverId)) {
+      await pasRef.update({ savedDrivers: [...current, driverId] });
+      await db.collection('drivers').doc(driverId).collection('clients').doc(user.uid).set({
+        passengerId: user.uid,
+        passengerName: pasDoc.data()?.name || user.displayName || 'Pasajero',
+        savedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        totalRides: 0
+      });
+      await db.collection('notifications').add({
+        userId: driverId,
+        title: 'Nuevo pasajero te agregó!',
+        body: `${pasDoc.data()?.name || 'Un pasajero'} te agregó desde el enlace compartido`,
+        type: 'new_passenger',
+        read: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      const ratingStars = '⭐'.repeat(Math.floor(driverData.rating || 0));
+      contentDiv.innerHTML = `
+        <div class="success-box" style="margin-bottom:20px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          ✓ ${driverData.name || 'Conductor'} agregado exitosamente!
+        </div>
+        <div class="driver-card">
+          <div class="driver-avatar">${(driverData.name?.charAt(0) || 'D')}</div>
+          <div class="driver-name">${driverData.name || 'Conductor'}</div>
+          <div class="driver-vehicle">${driverData.vehicleModel || ''}</div>
+          <div class="driver-rating">${ratingStars}</div>
+        </div>
+        <button class="btn-primary" onclick="window.location.href='/lybe-passenger.html'">📱 Ir a la app</button>
+      `;
+      showToast('Conductor agregado correctamente');
+    } else {
+      loadDriverInfo();
+      showToast('El conductor ya estaba en tu lista');
+    }
+  } catch(e) {
+    console.error(e);
+    contentDiv.innerHTML = `<div class="error-box">Error al agregar conductor: ${e.message}</div><button class="btn-secondary" onclick="loadDriverInfo()">Reintentar</button>`;
+    showToast('Error al agregar conductor');
+  }
+}
+
+function redirectToLogin() {
+  localStorage.setItem('pendingDriverId', driverId);
+  localStorage.setItem('pendingDriverCode', driverCodeParam || driverData?.driverCode);
+  window.location.href = '/lybe-passenger.html?action=login&redirect=' + encodeURIComponent(window.location.href);
+}
+
+function redirectToRegister() {
+  localStorage.setItem('pendingDriverId', driverId);
+  localStorage.setItem('pendingDriverCode', driverCodeParam || driverData?.driverCode);
+  window.location.href = '/lybe-passenger.html?action=register&redirect=' + encodeURIComponent(window.location.href);
+}
+
+// Detectar si la PWA está instalada y mostrar banner de instalación
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const installBanner = document.getElementById('installBanner');
+  if(installBanner && !window.matchMedia('(display-mode: standalone)').matches) {
+    installBanner.style.display = 'block';
+  }
+});
+
+// Escuchar cambios en autenticación
+auth.onAuthStateChanged(async (user) => {
+  if(user && driverData) {
+    // Verificar si hay conductor pendiente
+    const pendingId = localStorage.getItem('pendingDriverId');
+    if(pendingId === driverId) {
+      localStorage.removeItem('pendingDriverId');
+      localStorage.removeItem('pendingDriverCode');
+      await addDriverToAccount();
+    } else {
+      loadDriverInfo();
+    }
+  } else if(!user && driverData) {
+    loadDriverInfo();
+  }
+});
+
+// Iniciar
+loadDriverInfo();
+</script>
+</body>
+</html>
