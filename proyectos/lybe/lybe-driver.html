@@ -17,6 +17,15 @@
 <!-- QR Code Library -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 
+<!-- PWA Manifest -->
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lybe Driver">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="theme-color" content="#007AFF">
+<meta name="mobile-web-app-capable" content="yes">
+
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -209,7 +218,7 @@ body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(
 #qr-canvas { width: 200px; height: 200px; display: block; margin: 0 auto; }
 .download-btn { padding: 12px 32px; background: var(--primary); border: none; border-radius: 40px; color: white; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; }
 
-/* CLIENTS PAGE - SIN ESTADÍSTICAS */
+/* CLIENTS PAGE */
 .client-card { background: var(--white); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; border: 1px solid var(--gray-200); cursor: pointer; transition: all 0.2s; }
 .client-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--primary); }
 .client-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
@@ -341,7 +350,7 @@ body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(
       <div id="ridesCancelledTab" class="rides-tab-content" style="display:none"></div>
     </div>
     
-    <!-- CLIENTS PAGE - SIN ESTADÍSTICAS -->
+    <!-- CLIENTS PAGE -->
     <div class="page" id="page-clients">
       <div class="section-title">Mis Clientes</div>
       <div id="clientsList"></div>
@@ -528,7 +537,7 @@ function closeClientModal() { document.getElementById('clientModal').classList.r
 function callClient(phone) { if(phone) window.location.href = `tel:${phone}`; else showToast('Número no disponible', 'error'); }
 function chatWithClient(clientId, clientName) { showToast(`Chat con ${clientName} - Próximamente`, ''); closeClientModal(); }
 
-// ============ REST OF FUNCTIONS ============
+// ============ FUNCIONES PRINCIPALES ============
 async function loadDriverRidesFromFirestore() { /* mock */ }
 async function updateRideStatusInFirestore(rideId, newStatus) { showToast('Función en desarrollo',''); }
 async function loadDashboardRides() { /* mock */ }
@@ -546,8 +555,55 @@ function showActionMenu(rideId) { const ride = [...activeRides, ...completedRide
 function closeModal() { document.getElementById('rideModal').classList.remove('open'); }
 function closeActionModal() { document.getElementById('actionModal').classList.remove('open'); }
 
-// ============ PRINCIPALES ============
-async function generateQR() { const canvas=document.getElementById('qr-canvas'); if(!canvas)return; const text=`LYBE CONDUCTOR\n${driverData.name||''}\n${driverData.phone||''}\n${currentUser?.email||''}`; try{ await QRCode.toCanvas(canvas,text,{width:200}); }catch(e){} }
+// ============ GENERAR QR CON URL UNIVERSAL ============
+async function generateQR() { 
+  const canvas = document.getElementById('qr-canvas'); 
+  if(!canvas) return; 
+  
+  const driverId = currentDriverId;
+  const driverCode = currentDriverId.slice(-8).toUpperCase();
+  
+  // Guardar el código en Firestore
+  if(!driverData.driverCode) {
+    await db.collection('drivers').doc(currentDriverId).update({ 
+      driverCode: driverCode,
+      shareableLink: `${window.location.origin}/landing.html?driverId=${driverId}&code=${driverCode}`
+    });
+    driverData.driverCode = driverCode;
+  }
+  
+  // URL universal que funciona para cualquier escáner
+  const universalUrl = `${window.location.origin}/landing.html?driverId=${driverId}&code=${driverCode}`;
+  
+  try { 
+    await QRCode.toCanvas(canvas, universalUrl, { width: 200 });
+    
+    // Mostrar también el código para compartir manualmente
+    const qrContainer = document.querySelector('.qr-section');
+    if(qrContainer && !document.getElementById('share-code-info')) {
+      const shareInfo = document.createElement('div');
+      shareInfo.id = 'share-code-info';
+      shareInfo.innerHTML = `
+        <div style="margin-top:16px;padding:16px;background:#f3f4f6;border-radius:16px;text-align:center">
+          <div style="font-size:12px;color:#666;margin-bottom:8px">📱 Comparte también este código:</div>
+          <div style="font-size:28px;font-weight:800;letter-spacing:3px;color:var(--primary)">${driverCode}</div>
+          <div style="font-size:11px;color:#666;margin-top:8px">O comparte este enlace:</div>
+          <div style="font-size:11px;color:var(--primary);word-break:break-all">${universalUrl}</div>
+          <button class="btn-primary" style="margin-top:12px;padding:8px 16px" onclick="copyShareLink()">📋 Copiar enlace</button>
+        </div>
+      `;
+      qrContainer.appendChild(shareInfo);
+    }
+  } catch(e) { console.error(e); } 
+}
+
+function copyShareLink() {
+  const driverCode = currentDriverId.slice(-8).toUpperCase();
+  const link = `${window.location.origin}/landing.html?driverId=${currentDriverId}&code=${driverCode}`;
+  navigator.clipboard.writeText(link);
+  showToast('Enlace copiado al portapapeles', 'success');
+}
+
 function downloadQRCode() { const c=document.getElementById('qr-canvas'); if(c){ const a=document.createElement('a'); a.download='lybe_qr.png'; a.href=c.toDataURL(); a.click(); showToast('QR descargado','success'); } }
 async function signInWithGoogle() { showLoading(true); try { const result = await auth.signInWithPopup(googleProvider); const user = result.user; const docRef = db.collection('drivers').doc(user.uid); const doc = await docRef.get(); if (doc.exists && doc.data().phone) { currentUser = user; currentDriverId = user.uid; await loadAllData(); document.getElementById('auth-screen').classList.remove('active'); document.getElementById('main-screen').classList.add('active'); } else { await docRef.set({ name: user.displayName || user.email.split('@')[0], email: user.email, phone: '', licenseNumber: '', rating: 0, totalTrips: 0, profileImageUrl: user.photoURL || '' }); pendingCompleteUser = user; document.getElementById('auth-screen').classList.remove('active'); document.getElementById('complete-reg-screen').classList.add('active'); } } catch(e) { console.error(e); } showLoading(false); }
 async function completeRegistration() { const phone = document.getElementById('complete-phone').value.trim(); if (!phone) return; showLoading(true); await db.collection('drivers').doc(pendingCompleteUser.uid).update({ phone, licenseNumber: document.getElementById('complete-license').value.trim() }); currentUser = pendingCompleteUser; currentDriverId = pendingCompleteUser.uid; await loadAllData(); document.getElementById('complete-reg-screen').classList.remove('active'); document.getElementById('main-screen').classList.add('active'); showLoading(false); }
@@ -588,6 +644,13 @@ async function doLogin() { const e=document.getElementById('login-email').value,
 async function doRegister() { const n=document.getElementById('reg-name').value, e=document.getElementById('reg-email').value, ph=document.getElementById('reg-phone').value, p=document.getElementById('reg-pass').value; if(!n||!e||!p) return; showLoading(true); try{ const cred=await auth.createUserWithEmailAndPassword(e,p); await db.collection('drivers').doc(cred.user.uid).set({ name:n, email:e, phone:ph, licenseNumber:'', rating:0, totalTrips:0 }); } catch(err){ showLoading(false); showToast(err.message,''); } }
 function doLogout() { auth.signOut(); location.reload(); }
 async function signUpWithGoogle() { await signInWithGoogle(); }
+
+// Registrar Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW error:', err));
+  });
+}
 
 auth.onAuthStateChanged(async (user) => {
   if(user){ const doc=await db.collection('drivers').doc(user.uid).get(); if(doc.exists && doc.data().phone){ currentUser=user; currentDriverId=user.uid; await loadAllData(); document.getElementById('auth-screen').classList.remove('active'); document.getElementById('main-screen').classList.add('active'); setPage(0); } else if(doc.exists){ pendingCompleteUser=user; document.getElementById('auth-screen').classList.remove('active'); document.getElementById('complete-reg-screen').classList.add('active'); } } else { document.getElementById('auth-screen').classList.add('active'); document.getElementById('main-screen').classList.remove('active'); document.getElementById('complete-reg-screen').classList.remove('active'); } document.getElementById('page-loader').style.display='none'; });
