@@ -16,6 +16,15 @@
 <!-- QR Scanner Library -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
+<!-- PWA Manifest -->
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lybe">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="theme-color" content="#007AFF">
+<meta name="mobile-web-app-capable" content="yes">
+
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -164,29 +173,23 @@ body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(
 .scan-container { display: flex; flex-direction: column; align-items: center; padding: 20px 0; }
 .qr-frame { width: 260px; height: 260px; background: #000; border-radius: 24px; border: 2px solid var(--primary); position: relative; overflow: hidden; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
 #qr-reader { width: 100%; height: 100%; object-fit: cover; }
-.qr-scan-line { position: absolute; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--primary), transparent); animation: scan 2s linear infinite; }
-@keyframes scan { 0% { top: 10%; } 100% { top: 90%; } }
 .qr-hint { font-size: 13px; color: var(--gray-500); text-align: center; margin-bottom: 20px; }
-
-/* Driver Found Card - Estilo mejorado */
-.driver-found-card { background: var(--white); border-radius: var(--radius-xl); padding: 20px; width: 100%; border: 2px solid var(--success); margin-bottom: 16px; animation: fadeIn 0.3s ease; box-shadow: var(--shadow-lg); }
+.driver-found-card { background: var(--white); border-radius: var(--radius-lg); padding: 20px; width: 100%; border: 2px solid var(--success); margin-bottom: 16px; animation: fadeIn 0.3s ease; box-shadow: var(--shadow-lg); }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .driver-card-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--gray-100); }
-.driver-card-avatar { width: 70px; height: 70px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 35px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: white; }
+.driver-card-avatar { width: 70px; height: 70px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 35px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: white; overflow: hidden; }
+.driver-card-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .driver-card-name { font-size: 20px; font-weight: 800; color: var(--gray-800); margin-bottom: 4px; }
 .driver-card-vehicle { font-size: 14px; color: var(--gray-600); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
 .driver-card-stats { display: flex; gap: 20px; margin-bottom: 20px; padding: 12px 0; }
 .driver-stat { flex: 1; text-align: center; }
 .driver-stat-value { font-size: 22px; font-weight: 800; color: var(--primary); }
 .driver-stat-label { font-size: 11px; color: var(--gray-500); margin-top: 4px; }
-.driver-card-rating { display: flex; align-items: center; gap: 4px; background: var(--warning); padding: 4px 8px; border-radius: 20px; width: fit-content; color: white; font-size: 12px; font-weight: 600; }
+.driver-card-rating { display: inline-flex; align-items: center; gap: 4px; background: var(--warning); padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: 600; margin-bottom: 12px; }
 .driver-card-actions { display: flex; gap: 12px; margin-top: 8px; }
 .btn-add-driver { flex: 1; padding: 14px; background: var(--success); border: none; border-radius: var(--radius-md); color: white; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
 .btn-add-driver:hover { background: #0a9c6e; transform: translateY(-1px); }
 .btn-cancel-scan { flex: 1; padding: 14px; background: var(--gray-100); border: none; border-radius: var(--radius-md); color: var(--gray-700); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-.btn-cancel-scan:hover { background: var(--gray-200); }
-
-/* Success Message */
 .success-message { background: var(--success-light); border-radius: var(--radius-lg); padding: 16px; text-align: center; color: var(--success); font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
 /* Add by Code Section */
@@ -523,7 +526,6 @@ let nextRide = null;
 let html5QrCode = null;
 let pendingGoogleUser = null;
 let isScanningActive = false;
-let currentScannedDriver = null;
 
 function showToast(msg, type) { const t=document.getElementById('toast'); t.textContent=msg; t.className='toast '+(type||'')+' show'; setTimeout(()=>t.className='toast',2500); }
 function showLoading(show) { document.getElementById('loadingOverlay').classList.toggle('show', show); }
@@ -603,17 +605,52 @@ async function completeRegistration() {
 
 function closeCompleteModal() { document.getElementById('completeModal').classList.remove('open'); pendingGoogleUser = null; auth.signOut(); }
 function doLogout() { 
-  if(html5QrCode && isScanningActive) { 
-    try { html5QrCode.stop(); } catch(e) {} 
-    isScanningActive = false;
-  }
+  if(html5QrCode) { html5QrCode.stop().catch(e=>console.log); }
   auth.signOut(); 
   location.reload(); 
 }
 
+// ============ MANEJAR DEEP LINKS ============
+function handleDeepLink() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const action = urlParams.get('action');
+  const driverId = urlParams.get('driverId');
+  const driverCode = urlParams.get('code');
+  
+  const pendingDriverId = localStorage.getItem('pendingDriverId');
+  const pendingDriverCode = localStorage.getItem('pendingDriverCode');
+  
+  if(pendingDriverId && currentUser) {
+    localStorage.removeItem('pendingDriverId');
+    localStorage.removeItem('pendingDriverCode');
+    showPage('scan');
+    setTimeout(() => {
+      showDriverFound(pendingDriverId);
+    }, 500);
+  } else if((driverId || driverCode) && currentUser) {
+    showPage('scan');
+    setTimeout(() => {
+      showDriverFound(driverId || driverCode);
+    }, 500);
+  } else if((driverId || driverCode) && !currentUser) {
+    localStorage.setItem('pendingDriverId', driverId);
+    localStorage.setItem('pendingDriverCode', driverCode);
+    showToast('Login to add this driver', '');
+  }
+  
+  if(action === 'scan') showPage('scan');
+  if(action === 'drivers') showPage('drivers');
+  
+  // Limpiar URL
+  if(window.history && window.history.replaceState) {
+    const newUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, newUrl);
+  }
+}
+
 // ============ ADD DRIVER BY CODE ============
 window.addDriverByCode = async function() {
-  const code = document.getElementById('driverCodeInput').value.trim();
+  const code = document.getElementById('driverCodeInput').value.trim().toUpperCase();
   const resultDiv = document.getElementById('codeResult');
   if(!code) { showToast('Enter a driver code', ''); return; }
   showLoading(true);
@@ -680,15 +717,11 @@ async function startScanner() {
   const scanResultDiv = document.getElementById('scanResult');
   
   if(isScanningActive && html5QrCode) {
-    try { 
-      await html5QrCode.stop(); 
-      isScanningActive = false;
-      html5QrCode = null;
-      startBtn.textContent = 'Start Camera';
-      scanResultDiv.innerHTML = '';
-      currentScannedDriver = null;
-      showToast('Camera stopped', '');
-    } catch(e) { console.log(e); }
+    try { await html5QrCode.stop(); } catch(e) {}
+    isScanningActive = false;
+    html5QrCode = null;
+    startBtn.textContent = 'Start Camera';
+    scanResultDiv.innerHTML = '';
     return;
   }
   
@@ -697,21 +730,11 @@ async function startScanner() {
     const config = { fps: 10, qrbox: { width: 200, height: 200 } };
     
     await html5QrCode.start({ facingMode: "environment" }, config, async (decodedText) => {
-      console.log('QR Code detected:', decodedText);
-      
-      // Stop scanning immediately to prevent multiple scans
-      try { 
-        await html5QrCode.stop(); 
-        isScanningActive = false;
-        html5QrCode = null;
-        startBtn.textContent = 'Start Camera';
-      } catch(e) { console.log(e); }
-      
-      // Process the QR code and show driver card
-      await showDriverInfo(decodedText);
-      
-    }, (error) => {
-      // Silent error handling
+      try { await html5QrCode.stop(); } catch(e) {}
+      isScanningActive = false;
+      html5QrCode = null;
+      startBtn.textContent = 'Start Camera';
+      await showDriverFound(decodedText);
     });
     
     isScanningActive = true;
@@ -725,7 +748,7 @@ async function startScanner() {
   }
 }
 
-async function showDriverInfo(qrData) {
+async function showDriverFound(qrData) {
   if(!currentUser || !userData) {
     showToast('Please login first', 'error');
     return;
@@ -736,11 +759,9 @@ async function showDriverInfo(qrData) {
   const scanResultDiv = document.getElementById('scanResult');
   
   try {
-    let driverId = qrData;
-    let driverData = null;
-    
-    // Try to find driver by the scanned data (could be driverId or driverCode)
+    let driverId = qrData.trim();
     let driverDoc = await db.collection('drivers').doc(driverId).get();
+    
     if(!driverDoc.exists) {
       const codeQuery = await db.collection('drivers').where('driverCode', '==', driverId).get();
       if(!codeQuery.empty) {
@@ -750,71 +771,55 @@ async function showDriverInfo(qrData) {
     }
     
     if(!driverDoc.exists) {
-      scanResultDiv.innerHTML = `<div class="driver-found-card" style="border-color:var(--danger)">
-        <div style="color:var(--danger);text-align:center;padding:20px;">
-          ❌ Invalid QR code. Driver not found.
-        </div>
-        <button class="btn-primary" onclick="clearScanResult()">Try Again</button>
-      </div>`;
-      showToast('Invalid QR code', 'error');
+      scanResultDiv.innerHTML = `<div class="driver-found-card" style="border-color:var(--danger);text-align:center;padding:20px;color:var(--danger)">❌ Driver not found. Invalid QR code.</div>`;
       showLoading(false);
       return;
     }
     
-    driverData = driverDoc.data();
-    
+    const driverData = driverDoc.data();
     if(driverId === currentUser.uid) {
-      scanResultDiv.innerHTML = `<div class="driver-found-card" style="border-color:var(--danger)">
-        <div style="color:var(--danger);text-align:center;padding:20px;">
-          ❌ You cannot add yourself as a driver.
-        </div>
-        <button class="btn-primary" onclick="clearScanResult()">Try Again</button>
-      </div>`;
-      showToast('You cannot add yourself', 'error');
+      scanResultDiv.innerHTML = `<div class="driver-found-card" style="border-color:var(--danger);text-align:center;padding:20px;color:var(--danger)">❌ You cannot add yourself as a driver.</div>`;
       showLoading(false);
       return;
     }
     
-    // Check if already saved
     const isAlreadySaved = savedDrivers.some(d => d.id === driverId);
-    
-    currentScannedDriver = { id: driverId, data: driverData };
-    
-    // Build the driver card with photo/avatar, name, vehicle, trips, rating and add button
-    const ratingStars = '⭐'.repeat(Math.floor(driverData.rating || 0)) + (driverData.rating % 1 >= 0.5 ? '½' : '');
+    const ratingStars = '⭐'.repeat(Math.floor(driverData.rating || 0));
     const ratingValue = (driverData.rating || 0).toFixed(1);
     
     scanResultDiv.innerHTML = `
       <div class="driver-found-card">
         <div class="driver-card-header">
-          <div class="driver-card-avatar">${(driverData.name || 'D').charAt(0).toUpperCase()}</div>
+          <div class="driver-card-avatar">
+            ${driverData.profileImageUrl ? `<img src="${driverData.profileImageUrl}">` : (driverData.name?.charAt(0) || 'D')}
+          </div>
           <div style="flex:1">
             <div class="driver-card-name">${driverData.name || 'Driver'}</div>
             <div class="driver-card-vehicle">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="12" rx="2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
-              ${driverData.vehicleModel || 'Vehicle'} · ${driverData.licensePlate || 'No plate'}
+              ${driverData.vehicleModel || 'Vehicle'} · ${driverData.licensePlate || driverData.plate || 'No plate'}
             </div>
+            <div class="driver-card-rating">${ratingStars} ${ratingValue !== '0.0' ? ratingValue : 'New'}</div>
           </div>
-          <div class="driver-card-rating">${ratingStars} ${ratingValue}</div>
         </div>
         <div class="driver-card-stats">
           <div class="driver-stat">
             <div class="driver-stat-value">${driverData.totalTrips || 0}</div>
-            <div class="driver-stat-label">Viajes</div>
+            <div class="driver-stat-label">Trips</div>
           </div>
           <div class="driver-stat">
-            <div class="driver-stat-value">${driverData.rating || 'Nuevo'}</div>
+            <div class="driver-stat-value">${driverData.rating || 'New'}</div>
             <div class="driver-stat-label">Rating</div>
           </div>
           <div class="driver-stat">
-            <div class="driver-stat-value">${driverData.yearsExp || '1'}+</div>
-            <div class="driver-stat-label">Años exp.</div>
+            <div class="driver-stat-value">${driverData.driverCode ? driverData.driverCode.slice(-6) : 'N/A'}</div>
+            <div class="driver-stat-label">Code</div>
           </div>
         </div>
         ${isAlreadySaved ? 
           '<div class="success-message"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Driver already in your list</div>' : 
           `<div class="driver-card-actions">
-            <button class="btn-add-driver" onclick="saveScannedDriver()">➕ Add Driver</button>
+            <button class="btn-add-driver" onclick="saveScannedDriver('${driverId}')">➕ Add Driver</button>
             <button class="btn-cancel-scan" onclick="clearScanResult()">Cancel</button>
           </div>`
         }
@@ -823,32 +828,23 @@ async function showDriverInfo(qrData) {
     
   } catch(e) {
     console.error('Error processing QR:', e);
-    scanResultDiv.innerHTML = `<div class="driver-found-card" style="border-color:var(--danger)">
-      <div style="color:var(--danger);text-align:center;padding:20px;">❌ Error processing QR code</div>
-      <button class="btn-primary" onclick="clearScanResult()">Try Again</button>
-    </div>`;
-    showToast('Error processing QR code', 'error');
+    scanResultDiv.innerHTML = `<div class="driver-found-card" style="border-color:var(--danger);text-align:center;padding:20px;color:var(--danger)">❌ Error processing QR code</div>`;
   }
   showLoading(false);
 }
 
 function clearScanResult() {
   document.getElementById('scanResult').innerHTML = '';
-  currentScannedDriver = null;
-  showToast('Scan cancelled. You can scan again.', '');
+  showToast('Scan cancelled', '');
 }
 
-async function saveScannedDriver() {
-  if(!currentScannedDriver) {
-    showToast('No driver to save', 'error');
-    return;
-  }
-  
+async function saveScannedDriver(driverId) {
   showLoading(true);
-  const driverId = currentScannedDriver.id;
-  const driverData = currentScannedDriver.data;
-  
   try {
+    const driverDoc = await db.collection('drivers').doc(driverId).get();
+    if(!driverDoc.exists) throw new Error('Driver not found');
+    
+    const driverData = driverDoc.data();
     const pasRef = db.collection('passengers').doc(currentUser.uid);
     const pasDoc = await pasRef.get();
     const current = pasDoc.data()?.savedDrivers || [];
@@ -866,15 +862,14 @@ async function saveScannedDriver() {
     });
     await db.collection('notifications').add({
       userId: driverId, title: 'New passenger saved you!',
-      body: `${userData?.name || 'A passenger'} scanned your QR and saved you as a driver`,
+      body: `${userData?.name || 'A passenger'} scanned your QR and saved you`,
       type: 'new_passenger', read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     
     await loadSavedDrivers();
+    showToast(`${driverData.name || 'Driver'} saved successfully!`, 'success');
     
-    // Show success in the result div
-    const scanResultDiv = document.getElementById('scanResult');
-    scanResultDiv.innerHTML = `
+    document.getElementById('scanResult').innerHTML = `
       <div class="driver-found-card">
         <div class="success-message">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
@@ -883,9 +878,6 @@ async function saveScannedDriver() {
         <button class="btn-primary" style="margin-top:12px" onclick="clearScanResult()">Scan Another</button>
       </div>
     `;
-    
-    currentScannedDriver = null;
-    showToast(`${driverData.name || 'Driver'} saved successfully!`, 'success');
     
   } catch(e) {
     console.error(e);
@@ -1188,7 +1180,6 @@ function timeAgo(date) {
 
 // ============ NAVIGATION ============
 function showPage(page) {
-  // Stop scanner when leaving scan page
   if(page !== 'scan' && isScanningActive && html5QrCode) {
     try { html5QrCode.stop(); isScanningActive = false; } catch(e) {}
     const startBtn = document.getElementById('startScanBtn');
@@ -1216,6 +1207,13 @@ function switchTab(tab) {
 
 // ============ INIT ============
 document.getElementById('rideDate').min = new Date().toISOString().split('T')[0];
+
+// Registrar Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW error:', err));
+  });
+}
 
 auth.onAuthStateChanged(async (user) => {
   if(user) {
@@ -1245,9 +1243,11 @@ auth.onAuthStateChanged(async (user) => {
     await loadSavedDrivers();
     loadRides();
     loadNotifications();
+    handleDeepLink();
   } else if(!pendingGoogleUser) {
     document.getElementById('main-screen').classList.remove('active');
     document.getElementById('auth-screen').classList.add('active');
+    handleDeepLink();
   }
   document.getElementById('page-loader').style.display = 'none';
   showLoading(false);
