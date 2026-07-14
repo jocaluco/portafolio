@@ -1,0 +1,3604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shift App - FIFA Style</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #0a0a0a;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+  }
+
+  .phone {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+    background: #141414;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .phone.light-mode {
+    background: #f5f5f5;
+  }
+
+  .screen { display: none; flex: 1; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* =========================================================
+     BOTÓN DE MENÚ FLOTANTE - FIFA BLUE
+     ========================================================= */
+  .menu-fab {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 48px;
+    height: 48px;
+    background: #326295;
+    backdrop-filter: blur(10px);
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 100;
+  }
+
+  .menu-fab:hover {
+    background: #2a527a;
+  }
+
+  .menu-fab:active {
+    transform: scale(0.95);
+  }
+
+  .menu-fab .material-icons {
+    font-size: 28px;
+    color: #ffffff;
+  }
+
+  /* =========================================================
+     SHIFTS SCREEN
+     ========================================================= */
+  .shifts-screen { 
+    background: #141414; 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    padding: 20px 20px 20px;
+    gap: 20px;
+    position: relative;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .phone.light-mode .shifts-screen {
+    background: #f5f5f5;
+  }
+
+  .shifts-empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    text-align: center;
+    color: rgba(255,255,255,0.45);
+    font-size: 18px;
+    font-weight: 700;
+    min-height: 200px;
+  }
+  .phone.light-mode .shifts-empty { color: rgba(0,0,0,0.45); }
+  .shifts-empty.hidden { display: none; }
+
+  /* =========================================================
+     SHIFT OFFER CARD
+     ========================================================= */
+  .shift-offer-card {
+    background: #1E1E1E;
+    border-radius: 20px;
+    padding: 28px 20px 24px;
+    border: 1px solid rgba(50, 98, 149, 0.2);
+    transition: all 0.5s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 20px;
+    margin: 0;
+  }
+
+  .shift-offer-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 800px;
+    padding: 28px 20px 24px;
+    margin: 0;
+  }
+
+  .phone.light-mode .shift-offer-card {
+    background: #ffffff;
+    border-color: #e0e0e0;
+  }
+
+  .shift-offer-card .date-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .phone.light-mode .shift-offer-card .date-section { border-bottom-color: rgba(0,0,0,0.08); }
+
+  .shift-offer-card .date-section .day-number,
+  .shift-offer-card .date-section .month-year,
+  .shift-offer-card .date-section .day-name {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #ffffff;
+  }
+  .phone.light-mode .shift-offer-card .date-section .day-number,
+  .phone.light-mode .shift-offer-card .date-section .month-year,
+  .phone.light-mode .shift-offer-card .date-section .day-name { color: #1a1a1a; }
+
+  .shift-offer-card .date-section .month-year { text-transform: uppercase; }
+  .shift-offer-card .date-section .day-name { text-transform: uppercase; }
+
+  .shift-offer-card .time-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    margin-bottom: 18px;
+    gap: 12px;
+  }
+
+  .shift-offer-card .time-row .time-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+  .shift-offer-card .time-row .time-block .label {
+    font-size: 17px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.6);
+  }
+  .phone.light-mode .shift-offer-card .time-row .time-block .label { color: rgba(0,0,0,0.5); }
+  .shift-offer-card .time-row .time-block .value {
+    font-size: 16px;
+    font-weight: 400;
+    color: #ffffff;
+  }
+  .phone.light-mode .shift-offer-card .time-row .time-block .value { color: #1a1a1a; }
+  .shift-offer-card .time-row .time-block.check-out { text-align: right; }
+
+  .shift-offer-card .time-row .duration-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 0 10px;
+  }
+  .shift-offer-card .time-row .duration-center .duration-value {
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.5px;
+  }
+  .phone.light-mode .shift-offer-card .time-row .duration-center .duration-value { color: rgba(0,0,0,0.3); }
+
+  .shift-offer-card .divider-dashed {
+    border-top: 1.5px dashed rgba(255,255,255,0.06);
+    margin: 18px 0;
+  }
+  .phone.light-mode .shift-offer-card .divider-dashed { border-top-color: rgba(0,0,0,0.08); }
+
+  .shift-offer-card .staging-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .shift-offer-card .staging-row .staging-text { flex: 1; }
+  .shift-offer-card .staging-row .staging-text .staging-label {
+    font-size: 17px;
+    font-weight: 700;
+    color: #326295;
+    margin-bottom: 4px;
+  }
+  .shift-offer-card .staging-row .staging-text .staging-value {
+    font-size: 16px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.92);
+    line-height: 1.4;
+  }
+  .phone.light-mode .shift-offer-card .staging-row .staging-text .staging-value { color: #1a1a1a; }
+
+  .shift-offer-card .staging-row .nav-button {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .shift-offer-card .staging-row .nav-button:hover { background: rgba(255,255,255,0.08); }
+  .shift-offer-card .staging-row .nav-button:active { transform: scale(0.95); }
+  .shift-offer-card .staging-row .nav-button svg { width: 20px; height: 20px; fill: #326295; }
+
+  .shift-offer-card .box-row {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    margin-top: 4px;
+  }
+  .phone.light-mode .shift-offer-card .box-row { border-color: rgba(0,0,0,0.08); }
+
+  .shift-offer-card .box-row .box {
+    flex: 1;
+    padding: 16px 18px;
+    text-align: center;
+  }
+  .shift-offer-card .box-row .box:first-child { padding-right: 30px; }
+  .shift-offer-card .box-row .box:last-child { padding-left: 30px; }
+
+  .shift-offer-card .box-row .box .box-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+  }
+  .phone.light-mode .shift-offer-card .box-row .box .box-value { color: #1a1a1a; }
+
+  .shift-offer-card .box-row .box .box-label {
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.55);
+  }
+  .phone.light-mode .shift-offer-card .box-row .box .box-label { color: rgba(0,0,0,0.5); }
+
+  .shift-offer-card .box-row .vehicle-icon-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    background: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+  .shift-offer-card .box-row .vehicle-icon-center .material-icons { font-size: 22px; color: #326295; }
+
+  .shift-offer-card .box-row .divider-line {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    background: rgba(255,255,255,0.06);
+    z-index: 1;
+  }
+  .phone.light-mode .shift-offer-card .box-row .divider-line { background: rgba(0,0,0,0.08); }
+
+  .shift-offer-card .accept-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: #326295;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin-top: 18px;
+  }
+  .shift-offer-card .accept-btn:hover { background: #2a527a; }
+  .shift-offer-card .accept-btn:active { transform: scale(0.98); }
+
+  /* =========================================================
+     TODAY SHIFT CARD (después de aceptar)
+     ========================================================= */
+  .card { 
+    background: #1E1E1E;
+    border-radius: 20px;
+    padding: 28px 20px 24px;
+    border: 1px solid rgba(255,255,255,0.04);
+    transition: all 0.5s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 20px;
+    margin: 0;
+  }
+
+  .card.visible {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 800px;
+    padding: 28px 20px 24px;
+    margin: 0;
+  }
+
+  .phone.light-mode .card {
+    background: #ffffff;
+    border-color: #e0e0e0;
+  }
+
+  .card .date-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .phone.light-mode .card .date-section { border-bottom-color: rgba(0,0,0,0.08); }
+
+  .card .date-section .day-number,
+  .card .date-section .month-year,
+  .card .date-section .day-name {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #ffffff;
+  }
+  .phone.light-mode .card .date-section .day-number,
+  .phone.light-mode .card .date-section .month-year,
+  .phone.light-mode .card .date-section .day-name { color: #1a1a1a; }
+
+  .card .date-section .month-year { text-transform: uppercase; }
+  .card .date-section .day-name { text-transform: uppercase; }
+
+  .card .time-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    margin-bottom: 18px;
+    gap: 12px;
+  }
+
+  .card .time-row .time-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+  .card .time-row .time-block .label {
+    font-size: 17px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.6);
+  }
+  .phone.light-mode .card .time-row .time-block .label { color: rgba(0,0,0,0.5); }
+  .card .time-row .time-block .value {
+    font-size: 16px;
+    font-weight: 400;
+    color: #ffffff;
+  }
+  .phone.light-mode .card .time-row .time-block .value { color: #1a1a1a; }
+  .card .time-row .time-block.check-out { text-align: right; }
+
+  .card .time-row .duration-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 0 10px;
+  }
+  .card .time-row .duration-center .duration-value {
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.5px;
+  }
+  .phone.light-mode .card .time-row .duration-center .duration-value { color: rgba(0,0,0,0.3); }
+
+  .card .divider-dashed {
+    border-top: 1.5px dashed rgba(255,255,255,0.06);
+    margin: 18px 0;
+  }
+  .phone.light-mode .card .divider-dashed { border-top-color: rgba(0,0,0,0.08); }
+
+  .card .staging-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .card .staging-row .staging-text { flex: 1; }
+  .card .staging-row .staging-text .staging-label {
+    font-size: 17px;
+    font-weight: 700;
+    color: #326295;
+    margin-bottom: 4px;
+  }
+  .card .staging-row .staging-text .staging-value {
+    font-size: 16px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.92);
+    line-height: 1.4;
+  }
+  .phone.light-mode .card .staging-row .staging-text .staging-value { color: #1a1a1a; }
+
+  .card .staging-row .nav-button {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .card .staging-row .nav-button:hover { background: rgba(255,255,255,0.08); }
+  .card .staging-row .nav-button:active { transform: scale(0.95); }
+  .card .staging-row .nav-button svg { width: 20px; height: 20px; fill: #326295; }
+
+  .card .box-row {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    margin-top: 4px;
+  }
+  .phone.light-mode .card .box-row { border-color: rgba(0,0,0,0.08); }
+
+  .card .box-row .box {
+    flex: 1;
+    padding: 16px 18px;
+    text-align: center;
+  }
+  .card .box-row .box:first-child { padding-right: 30px; }
+  .card .box-row .box:last-child { padding-left: 30px; }
+
+  .card .box-row .box .box-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+  }
+  .phone.light-mode .card .box-row .box .box-value { color: #1a1a1a; }
+
+  .card .box-row .box .box-label {
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.55);
+  }
+  .phone.light-mode .card .box-row .box .box-label { color: rgba(0,0,0,0.5); }
+
+  .card .box-row .vehicle-icon-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    background: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+  .card .box-row .vehicle-icon-center .material-icons { font-size: 22px; color: #326295; }
+
+  .card .box-row .divider-line {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    background: rgba(255,255,255,0.06);
+    z-index: 1;
+  }
+  .phone.light-mode .card .box-row .divider-line { background: rgba(0,0,0,0.08); }
+
+  .card .shift-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: #326295;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin-top: 18px;
+  }
+  .card .shift-btn:hover { background: #2a527a; }
+  .card .shift-btn:active { transform: scale(0.98); }
+  .card .shift-btn.end { background: #ff453a; }
+  .card .shift-btn.end:hover { background: #e63e34; }
+
+  /* =========================================================
+     NEXT SHIFT CARD (después de aceptar el de mañana)
+     ========================================================= */
+  .card-next {
+    background: #1E1E1E;
+    border-radius: 20px;
+    padding: 16px 20px 16px;
+    border: 1px solid rgba(50, 98, 149, 0.2);
+    transition: all 0.5s ease;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    max-height: 0;
+    padding: 0 20px;
+    margin: 0;
+  }
+
+  .card-next.visible {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 500px;
+    padding: 16px 20px 16px;
+    margin: 0;
+  }
+
+  .phone.light-mode .card-next {
+    background: #ffffff;
+    border-color: #e0e0e0;
+  }
+
+  .card-next.accepted .button-row { display: none; }
+  .card-next.accepted .time-row-next { margin-bottom: 0; }
+
+  .card-next .date-section-next {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    padding: 0;
+    margin: 0 0 4px 0;
+    position: relative;
+  }
+
+  .card-next .date-section-next .day-number,
+  .card-next .date-section-next .month-year,
+  .card-next .date-section-next .day-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #ffffff;
+  }
+  .phone.light-mode .card-next .date-section-next .day-number,
+  .phone.light-mode .card-next .date-section-next .month-year,
+  .phone.light-mode .card-next .date-section-next .day-name { color: #1a1a1a; }
+
+  .card-next .date-section-next .month-year { text-transform: uppercase; }
+  .card-next .date-section-next .day-name { text-transform: uppercase; }
+
+  .card-next .car-icon-btn {
+    width: 36px;
+    height: 36px;
+    background: rgba(50, 98, 149, 0.15);
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    margin-left: auto;
+    position: relative;
+    z-index: 10;
+  }
+  .card-next .car-icon-btn:hover { background: rgba(50, 98, 149, 0.25); }
+  .card-next .car-icon-btn:active { transform: scale(0.95); }
+  .card-next .car-icon-btn .material-icons { font-size: 20px; color: #326295; }
+
+  .card-next .time-row-next {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    margin: 0;
+    gap: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .card-next .time-row-next .time-block-next {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    flex: 1;
+  }
+  .card-next .time-row-next .time-block-next .label {
+    font-size: 17px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.6);
+  }
+  .phone.light-mode .card-next .time-row-next .time-block-next .label { color: rgba(0,0,0,0.5); }
+  .card-next .time-row-next .time-block-next .value {
+    font-size: 16px;
+    font-weight: 400;
+    color: #ffffff;
+  }
+  .phone.light-mode .card-next .time-row-next .time-block-next .value { color: #1a1a1a; }
+  .card-next .time-row-next .time-block-next.check-out { text-align: right; }
+
+  .card-next .time-row-next .duration-center-next {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 0 10px;
+  }
+  .card-next .time-row-next .duration-center-next .duration-value {
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.5px;
+  }
+  .phone.light-mode .card-next .time-row-next .duration-center-next .duration-value { color: rgba(0,0,0,0.3); }
+
+  .card-next .vehicle-section {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    margin: 0;
+  }
+  .card-next .vehicle-section.show {
+    max-height: 120px;
+    opacity: 1;
+    margin: 4px 0 6px 0;
+  }
+
+  .card-next .box-row-next {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+  }
+  .phone.light-mode .card-next .box-row-next { border-color: rgba(0,0,0,0.08); }
+
+  .card-next .box-row-next .box {
+    flex: 1;
+    padding: 12px 14px;
+    text-align: center;
+  }
+  .card-next .box-row-next .box:first-child { padding-right: 28px; }
+  .card-next .box-row-next .box:last-child { padding-left: 28px; }
+
+  .card-next .box-row-next .box .box-value-next {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 2px;
+  }
+  .phone.light-mode .card-next .box-row-next .box .box-value-next { color: #1a1a1a; }
+
+  .card-next .box-row-next .box .box-label-next {
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.55);
+  }
+  .phone.light-mode .card-next .box-row-next .box .box-label-next { color: rgba(0,0,0,0.5); }
+
+  .card-next .box-row-next .vehicle-icon-center-next {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 34px;
+    height: 34px;
+    background: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+  .card-next .box-row-next .vehicle-icon-center-next .material-icons { font-size: 18px; color: #326295; }
+
+  .card-next .box-row-next .divider-line-next {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    background: rgba(255,255,255,0.06);
+    z-index: 1;
+  }
+  .phone.light-mode .card-next .box-row-next .divider-line-next { background: rgba(0,0,0,0.08); }
+
+  .card-next .button-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+    transition: all 0.3s ease;
+  }
+  .card-next .button-row .btn-accept {
+    flex: 1;
+    padding: 14px;
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: #326295;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .card-next .button-row .btn-accept:hover { background: #2a527a; }
+  .card-next .button-row .btn-accept:active { transform: scale(0.97); }
+
+  .card-next .button-row .btn-cancel {
+    flex: 1;
+    padding: 14px;
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .card-next .button-row .btn-cancel:hover { background: rgba(255,255,255,0.15); }
+  .card-next .button-row .btn-cancel:active { transform: scale(0.97); }
+  .phone.light-mode .card-next .button-row .btn-cancel {
+    background: rgba(0,0,0,0.08);
+    color: #1a1a1a;
+  }
+  .phone.light-mode .card-next .button-row .btn-cancel:hover { background: rgba(0,0,0,0.15); }
+
+  /* =========================================================
+     JOBS SCREEN
+     ========================================================= */
+  .jobs-screen { 
+    background: #141414; 
+    color: #ffffff; 
+    flex: 1; 
+    padding: 20px 0 20px; 
+    position: relative; 
+    display: flex;
+    flex-direction: column;
+  }
+  .phone.light-mode .jobs-screen { background: #f5f5f5; }
+
+  .jobs-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    padding: 0 0 14px;
+    color: #ffffff;
+  }
+  .phone.light-mode .jobs-title { color: #1a1a1a; }
+
+  .jobs-empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    text-align: center;
+    color: rgba(255,255,255,0.45);
+    font-size: 18px;
+    font-weight: 700;
+    min-height: 200px;
+    padding: 20px;
+  }
+  .phone.light-mode .jobs-empty { color: rgba(0,0,0,0.45); }
+  .jobs-empty.hidden { display: none; }
+
+  .jobs-content {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+  }
+  .jobs-content.visible {
+    display: flex;
+  }
+
+  .day-strip {
+    display: flex;
+    padding: 0 16px 12px;
+    gap: 16px;
+    overflow-x: auto;
+    justify-content: center;
+  }
+
+  .day-cell {
+    flex: 0 0 auto;
+    min-width: 40px;
+    text-align: center;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: all 0.2s ease;
+  }
+  .day-cell:active { transform: scale(0.95); }
+  .day-cell .day-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .phone.light-mode .day-cell .day-name { color: rgba(0,0,0,0.3); }
+  .day-cell .day-num {
+    font-size: 22px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.3);
+    line-height: 1;
+  }
+  .phone.light-mode .day-cell .day-num { color: rgba(0,0,0,0.3); }
+  .day-cell.active .day-name,
+  .day-cell.active .day-num { color: #ffffff; }
+  .phone.light-mode .day-cell.active .day-name,
+  .phone.light-mode .day-cell.active .day-num { color: #1a1a1a; }
+  .day-cell.active .day-num {
+    border-bottom: 3px solid #326295;
+    padding-bottom: 6px;
+  }
+
+  .date-banner {
+    background: #1E1E1E;
+    padding: 14px 20px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 4px 0;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .phone.light-mode .date-banner {
+    background: #ffffff;
+    color: #1a1a1a;
+    border-color: #e0e0e0;
+  }
+
+  .jobs-list-container {
+    padding: 0 0 20px 0;
+  }
+
+  .job-card {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .phone.light-mode .job-card { border-bottom-color: rgba(0,0,0,0.06); }
+  .job-card:hover { background: rgba(255,255,255,0.03); }
+  .phone.light-mode .job-card:hover { background: rgba(0,0,0,0.03); }
+  .job-card:active { background: rgba(255,255,255,0.06); }
+  .phone.light-mode .job-card:active { background: rgba(0,0,0,0.06); }
+
+  .job-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .job-location {
+    font-size: 17px;
+    font-weight: 500;
+    color: #ffffff;
+    flex: 1;
+  }
+  .phone.light-mode .job-location { color: #1a1a1a; }
+  .job-location.left { text-align: left; }
+  .job-location.right { text-align: right; }
+  .job-arrow {
+    font-size: 20px;
+    color: #ffffff;
+    flex-shrink: 0;
+    opacity: 0.4;
+  }
+  .phone.light-mode .job-arrow { color: #1a1a1a; }
+
+  .job-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+    gap: 12px;
+  }
+  .job-time {
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.4);
+    flex: 1;
+  }
+  .phone.light-mode .job-time { color: rgba(0,0,0,0.4); }
+  .job-time.left { text-align: left; }
+  .job-time.right { text-align: right; }
+
+  /* =========================================================
+     TRIP DETAIL SCREEN
+     ========================================================= */
+  .trip-detail-screen { 
+    background: #141414; 
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    padding: 20px 20px 120px;
+    overflow-y: auto;
+    position: relative;
+  }
+  .phone.light-mode .trip-detail-screen { background: #f5f5f5; }
+
+  .back-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 0 12px;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    color: #ffffff;
+    position: sticky;
+    top: 0;
+    background: #141414;
+    z-index: 10;
+  }
+  .phone.light-mode .back-header {
+    background: #f5f5f5;
+    color: #1a1a1a;
+  }
+  .back-header:hover { opacity: 0.8; }
+  .back-header:active { transform: scale(0.98); }
+  .back-header svg { width: 24px; height: 24px; fill: #326295; }
+  .back-header span { font-size: 20px; font-weight: 600; }
+
+  .staging-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    background: rgba(50, 98, 149, 0.06);
+    border-radius: 14px;
+    border: 1px solid rgba(50, 98, 149, 0.1);
+    position: relative;
+    transition: all 0.3s ease;
+  }
+  .staging-section.waiting {
+    background: rgba(245, 166, 35, 0.06);
+    border: 1px solid rgba(245, 166, 35, 0.15);
+  }
+  .phone.light-mode .staging-section {
+    background: rgba(50, 98, 149, 0.04);
+    border-color: rgba(50, 98, 149, 0.08);
+  }
+
+  .staging-text { flex: 1; position: relative; z-index: 1; }
+  .staging-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #326295;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+  }
+  .staging-label.waiting { color: #f5a623; }
+
+  .staging-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+  }
+  .phone.light-mode .staging-value { color: #1a1a1a; }
+  .staging-value .material-icons {
+    font-size: 20px;
+    color: #326295;
+    transition: all 0.3s ease;
+  }
+  .staging-value.waiting .material-icons { color: #f5a623; }
+
+  .staging-nav-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(50, 98, 149, 0.12);
+    border: 1px solid rgba(50, 98, 149, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: 0.2s;
+    position: relative;
+    z-index: 1;
+  }
+  .staging-nav-button:hover { background: rgba(50, 98, 149, 0.2); }
+  .staging-nav-button:active { transform: scale(0.95); }
+  .staging-nav-button svg { width: 18px; height: 18px; fill: #326295; }
+
+  /* =========================================================
+     TRIP ITEMS - PICKUP / DROPOFF
+     ========================================================= */
+  .trip-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 8px 0;
+    position: relative;
+  }
+  .trip-item:first-child { padding-top: 0; }
+  .trip-item:last-child { padding-bottom: 0; }
+
+  .location-icon {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+    position: relative;
+    z-index: 2;
+  }
+  .location-icon.pickup { background: #326295; }
+  .location-icon.dropoff { background: #ff453a; }
+
+  .location-name {
+    font-size: 18px;
+    font-weight: 400;
+    color: #ffffff;
+    line-height: 1.4;
+    flex: 1;
+    padding-top: 2px;
+  }
+  .phone.light-mode .location-name { color: #1a1a1a; }
+
+  .location-time {
+    font-size: 18px;
+    font-weight: 400;
+    color: #ffffff;
+    flex-shrink: 0;
+    margin-top: 4px;
+    padding-top: 2px;
+  }
+  .phone.light-mode .location-time { color: #1a1a1a; }
+
+  .location-line {
+    position: absolute;
+    left: 5px;
+    top: 20px;
+    bottom: 20px;
+    width: 2.5px;
+    background: rgba(255,255,255,0.08);
+    z-index: 1;
+    border-radius: 2px;
+  }
+  .trip-item:last-child .location-line { display: none; }
+
+  .icon-wrapper {
+    position: relative;
+    width: 12px;
+    flex-shrink: 0;
+  }
+
+  .divider-light {
+    border-top: 1px solid rgba(255,255,255,0.04);
+    margin: 4px 0 4px 28px;
+  }
+  .phone.light-mode .divider-light { border-top-color: rgba(0,0,0,0.06); }
+
+  /* =========================================================
+     NAVIGATE BUTTON
+     ========================================================= */
+  .navigate-btn-wrapper {
+    padding: 0 4px;
+    margin: 4px 0 16px 0;
+    transition: all 0.3s ease;
+    max-height: 60px;
+    opacity: 1;
+    overflow: hidden;
+  }
+  .navigate-btn-wrapper.hidden {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .btn-navigate {
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(50, 98, 149, 0.2);
+    background: rgba(50, 98, 149, 0.06);
+    color: #326295;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .btn-navigate:hover {
+    background: rgba(50, 98, 149, 0.12);
+    border-color: rgba(50, 98, 149, 0.3);
+  }
+  .btn-navigate:active { transform: scale(0.98); }
+
+  /* =========================================================
+     CUSTOMER DETAILS
+     ========================================================= */
+  .detail-section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0 4px;
+  }
+  .phone.light-mode .detail-section-title { color: rgba(0,0,0,0.5); }
+
+  .detail-section-title-clickable {
+    font-size: 15px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: 0.2s;
+  }
+  .phone.light-mode .detail-section-title-clickable { color: rgba(0,0,0,0.5); }
+  .detail-section-title-clickable:hover { color: rgba(255,255,255,0.7); }
+  .phone.light-mode .detail-section-title-clickable:hover { color: rgba(0,0,0,0.7); }
+  .detail-section-title-clickable .material-icons {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+  }
+  .detail-section-title-clickable .material-icons.rotated { transform: rotate(180deg); }
+
+  .customer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 4px;
+  }
+
+  .customer-list-collapsible {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 4px;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .customer-list-collapsible.open {
+    max-height: 300px;
+    opacity: 1;
+    padding: 8px 4px;
+  }
+
+  .customer-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 17px;
+    font-weight: 500;
+    color: #ffffff;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .phone.light-mode .customer-item {
+    color: #1a1a1a;
+    border-bottom-color: rgba(0,0,0,0.06);
+  }
+  .customer-item:last-child { border-bottom: none; }
+
+  .customer-item .check-box {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .phone.light-mode .customer-item .check-box { border-color: rgba(0,0,0,0.2); }
+  .customer-item .check-box.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .customer-item .check-box.readonly {
+    opacity: 1;
+    pointer-events: none;
+    cursor: default;
+  }
+  .customer-item .check-box:hover { border-color: rgba(255,255,255,0.4); }
+  .phone.light-mode .customer-item .check-box:hover { border-color: rgba(0,0,0,0.4); }
+  .customer-item .check-box.checked {
+    background: #34c759;
+    border-color: #34c759;
+  }
+  .customer-item .check-box.checked .material-icons {
+    display: block;
+    color: #ffffff;
+  }
+  .customer-item .check-box.no-show {
+    background: #ff453a;
+    border-color: #ff453a;
+  }
+  .customer-item .check-box.no-show .material-icons {
+    display: block;
+    color: #ffffff;
+  }
+  .customer-item .check-box .material-icons {
+    font-size: 16px;
+    color: #ffffff;
+    display: none;
+  }
+
+  /* =========================================================
+     CUSTOMER DETAILS - SUMMARY (SOLO LECTURA)
+     ========================================================= */
+  .customer-item-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 17px;
+    font-weight: 500;
+    color: #ffffff;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .phone.light-mode .customer-item-summary {
+    color: #1a1a1a;
+    border-bottom-color: rgba(0,0,0,0.06);
+  }
+  .customer-item-summary:last-child { border-bottom: none; }
+
+  .customer-item-summary .status-badge {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 2px 12px;
+    border-radius: 12px;
+  }
+  .customer-item-summary .status-badge.on-board {
+    color: #34c759;
+    background: rgba(52, 199, 89, 0.12);
+  }
+  .customer-item-summary .status-badge.no-show {
+    color: #ff453a;
+    background: rgba(255, 69, 58, 0.12);
+  }
+
+  /* =========================================================
+     FLIGHT DETAILS
+     ========================================================= */
+  .flight-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 16px;
+  }
+  .flight-row .label { color: rgba(255,255,255,0.5); }
+  .phone.light-mode .flight-row .label { color: rgba(0,0,0,0.5); }
+  .flight-row .value { color: #ffffff; font-weight: 500; }
+  .phone.light-mode .flight-row .value { color: #1a1a1a; }
+
+  /* =========================================================
+     TRIP PROGRESS SCREEN - ARRIVED PICKUP
+     ========================================================= */
+  .trip-progress-screen { 
+    background: #141414; 
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    padding: 20px 20px 120px;
+    overflow-y: auto;
+    position: relative;
+  }
+  .phone.light-mode .trip-progress-screen { background: #f5f5f5; }
+
+  /* =========================================================
+     TRIP PROGRESS SCREEN - ARRIVED DROPOFF
+     ========================================================= */
+  .trip-progress-dropoff-screen { 
+    background: #141414; 
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    padding: 20px 20px 120px;
+    overflow-y: auto;
+    position: relative;
+  }
+  .phone.light-mode .trip-progress-dropoff-screen { background: #f5f5f5; }
+
+  /* =========================================================
+     TRIP SUMMARY SCREEN
+     ========================================================= */
+  .trip-summary-screen { 
+    background: #141414; 
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    padding: 20px 20px 120px;
+    overflow-y: auto;
+    position: relative;
+  }
+  .phone.light-mode .trip-summary-screen { background: #f5f5f5; }
+
+  .completed-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(52, 199, 89, 0.12);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px auto 16px;
+  }
+  .completed-icon .material-icons { font-size: 48px; color: #34c759; }
+
+  .completed-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .phone.light-mode .completed-title { color: #1a1a1a; }
+
+  .completed-sub {
+    font-size: 14px;
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .phone.light-mode .completed-sub { color: rgba(0,0,0,0.4); }
+
+  .trip-info-card {
+    background: #1E1E1E;
+    border-radius: 16px;
+    padding: 20px;
+    width: 100%;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .phone.light-mode .trip-info-card {
+    background: #ffffff;
+    border-color: #e0e0e0;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .phone.light-mode .info-row { border-bottom-color: rgba(0,0,0,0.06); }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .label { font-size: 14px; color: rgba(255,255,255,0.4); }
+  .phone.light-mode .info-row .label { color: rgba(0,0,0,0.4); }
+  .info-row .value { font-size: 15px; font-weight: 500; color: #ffffff; }
+  .phone.light-mode .info-row .value { color: #1a1a1a; }
+
+  .location-summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .phone.light-mode .location-summary { border-bottom-color: rgba(0,0,0,0.06); }
+  .location-summary:last-child { border-bottom: none; }
+  .location-summary .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .location-summary .dot.pickup { background: #326295; }
+  .location-summary .dot.dropoff { background: #ff453a; }
+  .location-summary .location-text { flex: 1; }
+  .location-summary .location-text .address { font-size: 15px; color: #ffffff; }
+  .phone.light-mode .location-summary .location-text .address { color: #1a1a1a; }
+  .location-summary .location-text .time { font-size: 13px; color: rgba(255,255,255,0.4); }
+  .phone.light-mode .location-summary .location-text .time { color: rgba(0,0,0,0.4); }
+  .location-summary .status {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 2px 12px;
+    border-radius: 12px;
+  }
+  .location-summary .status.completed {
+    color: #34c759;
+    background: rgba(52, 199, 89, 0.12);
+  }
+
+  /* =========================================================
+     BOTÓN FIJO
+     ========================================================= */
+  .btn-wrapper {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    padding: 16px 20px 20px;
+    background: linear-gradient(to top, #141414 60%, transparent);
+    z-index: 100;
+  }
+  .phone.light-mode .btn-wrapper {
+    background: linear-gradient(to top, #f5f5f5 60%, transparent);
+  }
+
+  .btn-arrived {
+    width: 100%;
+    padding: 18px;
+    border-radius: 16px;
+    border: none;
+    font-size: 18px;
+    font-weight: 700;
+    background: #326295;
+    color: #ffffff;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .btn-arrived:hover { background: #2a527a; }
+  .btn-arrived:active { transform: scale(0.98); }
+  .btn-arrived:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-arrived.start-trip { background: #34c759; }
+  .btn-arrived.start-trip:hover { background: #2db84e; }
+
+  .btn-complete {
+    width: 100%;
+    padding: 18px;
+    border-radius: 16px;
+    border: none;
+    font-size: 18px;
+    font-weight: 700;
+    background: #326295;
+    color: #ffffff;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .btn-complete:hover { background: #2a527a; }
+  .btn-complete:active { transform: scale(0.98); }
+
+  .start-btn-wrapper {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    padding: 16px 20px 20px;
+    background: linear-gradient(to top, #141414 60%, transparent);
+    z-index: 100;
+    display: none;
+  }
+  .phone.light-mode .start-btn-wrapper {
+    background: linear-gradient(to top, #f5f5f5 60%, transparent);
+  }
+  .start-btn-wrapper.visible { display: block; }
+
+  .start-btn {
+    width: 100%;
+    padding: 18px;
+    border-radius: 16px;
+    border: none;
+    font-size: 18px;
+    font-weight: 700;
+    background: #326295;
+    color: #ffffff;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .start-btn:hover { background: #2a527a; }
+  .start-btn:active { transform: scale(0.98); }
+
+  /* =========================================================
+     MODAL
+     ========================================================= */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 999;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(8px);
+  }
+  .modal-overlay.active { display: flex; }
+
+  .modal-card {
+    background: #1E1E1E;
+    border-radius: 24px;
+    padding: 28px 24px 24px;
+    max-width: 360px;
+    width: 90%;
+    border: 1px solid rgba(255,255,255,0.04);
+    animation: modalIn 0.3s ease;
+  }
+  .phone.light-mode .modal-card {
+    background: #ffffff;
+    border-color: #e0e0e0;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-card .modal-icon {
+    width: 56px;
+    height: 56px;
+    background: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+  }
+  .modal-card .modal-icon .material-icons { font-size: 32px; color: #326295; }
+
+  .modal-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .phone.light-mode .modal-card h3 { color: #1a1a1a; }
+
+  .modal-card .modal-sub {
+    font-size: 14px;
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .phone.light-mode .modal-card .modal-sub { color: rgba(0,0,0,0.4); }
+
+  .modal-card .modal-buttons { display: flex; gap: 12px; }
+  .modal-card .modal-btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .modal-card .modal-btn:active { transform: scale(0.97); }
+  .modal-card .modal-btn.yes { background: #34c759; color: #ffffff; }
+  .modal-card .modal-btn.yes:hover { background: #2db84e; }
+  .modal-card .modal-btn.no-show { background: #ff453a; color: #ffffff; }
+  .modal-card .modal-btn.no-show:hover { background: #e63e34; }
+
+  /* =========================================================
+     MAP SCREEN
+     ========================================================= */
+  .map-screen { 
+    position:relative; 
+    flex:1; 
+    background:#141414; 
+    color:#fff; 
+    overflow:hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  .phone.light-mode .map-screen { background: #f5f5f5; }
+  
+  .map-container {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+  
+  #map {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: #1E1E1E;
+    z-index: 1;
+  }
+  .phone.light-mode #map { background: #e8e8e8; }
+  
+  .leaflet-control-zoom,
+  .leaflet-control-attribution,
+  .leaflet-control-scale {
+    display: none !important;
+  }
+  
+  .map-controls {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    padding: 0 16px;
+    z-index: 100;
+    pointer-events: none;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .map-controls > * { pointer-events: auto; }
+
+  .map-menu-btn {
+    width: 48px;
+    height: 48px;
+    background: #326295;
+    backdrop-filter: blur(10px);
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    z-index: 101;
+  }
+  .map-menu-btn:hover { background: #2a527a; }
+  .map-menu-btn:active { transform: scale(0.95); }
+  .map-menu-btn .material-icons { font-size: 28px; color: #ffffff; }
+  
+  .map-search-bar {
+    background: #1E1E1E;
+    border-radius: 30px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255,255,255,0.6);
+    font-size: 16px;
+    cursor: pointer;
+    transition:0.2s;
+    flex: 1;
+    border: 1px solid rgba(255,255,255,0.04);
+    z-index: 101;
+  }
+  .phone.light-mode .map-search-bar {
+    background: #ffffff;
+    border-color: #e0e0e0;
+    color: rgba(0,0,0,0.6);
+  }
+  .map-search-bar:hover { background: #272727; }
+  .phone.light-mode .map-search-bar:hover { background: #f0f0f0; }
+  .map-search-bar svg { width:18px; height:18px; fill:rgba(255,255,255,0.6); }
+  .phone.light-mode .map-search-bar svg { fill: rgba(0,0,0,0.6); }
+
+  .custom-pin-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .custom-pin {
+    width: 28px;
+    height: 28px;
+    background: #326295;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    position: relative;
+  }
+  .custom-pin .material-icons { font-size: 16px; color: #ffffff; }
+  .custom-pin::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 6px solid #326295;
+  }
+
+  .pin-label {
+    color: #000000;
+    font-size: 10px;
+    font-weight: 700;
+    margin-top: 6px;
+    text-shadow: 0 0 8px rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.8);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  /* =========================================================
+     ALERTS SCREEN
+     ========================================================= */
+  .alerts-screen { 
+    background: #141414; 
+    flex: 1; 
+    padding: 20px 0 20px; 
+    position: relative; 
+  }
+  .phone.light-mode .alerts-screen { background: #f5f5f5; }
+
+  .alerts-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0 14px;
+  }
+  .alerts-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+  .phone.light-mode .alerts-header h2 { color: #1a1a1a; }
+
+  .alerts-list {
+    padding: 0 20px;
+  }
+
+  .alert-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1.5px solid rgba(255,255,255,0.06);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 1;
+    max-height: 80px;
+    overflow: hidden;
+  }
+  .alert-item.hidden {
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+  }
+  .phone.light-mode .alert-item { border-bottom-color: rgba(0,0,0,0.06); }
+  .alert-item:last-child { border-bottom: none; }
+  .alert-item:hover {
+    background: rgba(255,255,255,0.03);
+    margin: 0 -20px;
+    padding: 14px 20px;
+  }
+  .phone.light-mode .alert-item:hover { background: rgba(0,0,0,0.03); }
+  .alert-item:active { transform: scale(0.98); }
+  .alert-item.read .alert-status .dot { background: rgba(255,255,255,0.15); }
+  .phone.light-mode .alert-item.read .alert-status .dot { background: rgba(0,0,0,0.15); }
+
+  .alert-item .alert-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(50, 98, 149, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .alert-item .alert-icon .material-icons { font-size: 20px; color: #326295; }
+  .alert-item .alert-content { flex: 1; }
+  .alert-item .alert-content .alert-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: #ffffff;
+  }
+  .phone.light-mode .alert-item .alert-content .alert-title { color: #1a1a1a; }
+  .alert-item .alert-content .alert-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+  }
+  .phone.light-mode .alert-item .alert-content .alert-sub { color: rgba(0,0,0,0.4); }
+  .alert-item .alert-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .alert-item .alert-status .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #326295;
+    transition: all 0.3s ease;
+  }
+  .alert-item .alert-status .dot.read { background: rgba(255,255,255,0.15); }
+  .phone.light-mode .alert-item .alert-status .dot.read { background: rgba(0,0,0,0.15); }
+
+  /* =========================================================
+     MENU SCREEN
+     ========================================================= */
+  .menu-screen { 
+    background: #141414; 
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    padding: 20px 20px 30px;
+    overflow-y: auto;
+    position: relative;
+    min-height: 100vh;
+  }
+  .phone.light-mode .menu-screen { background: #f5f5f5; }
+
+  .menu-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 0 12px;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    color: #ffffff;
+    position: sticky;
+    top: 0;
+    background: #141414;
+    z-index: 10;
+  }
+  .phone.light-mode .menu-header {
+    background: #f5f5f5;
+    color: #1a1a1a;
+  }
+  .menu-header:hover { opacity: 0.8; }
+  .menu-header:active { transform: scale(0.98); }
+  .menu-header svg { width: 24px; height: 24px; fill: #326295; flex-shrink: 0; }
+  .menu-header span { font-size: 20px; font-weight: 600; }
+
+  .menu-items { padding-top: 10px; }
+  .menu-item { 
+    display: flex; 
+    align-items: center; 
+    gap: 14px; 
+    padding: 16px 0; 
+    border-bottom: 1px solid rgba(255,255,255,0.06); 
+    font-size: 17px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: 0.2s; 
+    color: #ffffff; 
+  }
+  .phone.light-mode .menu-item {
+    color: #1a1a1a;
+    border-bottom-color: rgba(0,0,0,0.06);
+  }
+  .menu-item:hover { background: rgba(255,255,255,0.03); padding-left: 8px; }
+  .phone.light-mode .menu-item:hover { background: rgba(0,0,0,0.03); }
+  .menu-item:active { transform: scale(0.98); }
+  .menu-item .material-icons { font-size: 24px; color: #326295; }
+
+  .toggle-switch {
+    margin-left: auto;
+    width: 48px;
+    height: 26px;
+    background: #326295;
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: 0.3s;
+    flex-shrink: 0;
+  }
+  .toggle-switch.active { background: rgba(255,255,255,0.2); }
+  .phone.light-mode .toggle-switch.active { background: rgba(0,0,0,0.15); }
+  .toggle-switch .toggle-knob {
+    width: 22px;
+    height: 22px;
+    background: #ffffff;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 24px;
+    transition: 0.3s;
+  }
+  .toggle-switch.active .toggle-knob { left: 2px; }
+
+  /* =========================================================
+     NAVBAR - FIFA BLUE
+     ========================================================= */
+  .navbar {
+    background: #326295;
+    display: flex;
+    padding: 14px 0 22px;
+    flex-shrink: 0;
+  }
+
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    background: none;
+    border: none;
+    transition: all 0.2s ease;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    letter-spacing: 0.3px;
+    position: relative;
+  }
+  .nav-item:hover { opacity: 0.8; }
+  .nav-item:active { transform: scale(0.95); }
+  .nav-item .material-icons {
+    font-size: 26px;
+    color: rgba(255,255,255,0.6);
+    transition: all 0.2s ease;
+  }
+  .nav-item.active { color: #ffffff; }
+  .nav-item.active .material-icons { color: #ffffff; }
+
+  .badge {
+    position: absolute;
+    top: -4px;
+    right: -6px;
+    background: #ff453a;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .badge.hidden { display: none; }
+
+  /* =========================================================
+     NAVBAR - OCULTO EN PANTALLAS DE VIAJE
+     ========================================================= */
+  .screen-tripdetail-active .navbar,
+  .screen-pickup-active .navbar,
+  .screen-dropoff-active .navbar,
+  .screen-summary-active .navbar {
+    display: none !important;
+  }
+
+  .navbar { display: flex; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: #141414; }
+  ::-webkit-scrollbar-thumb { background: #326295; border-radius: 10px; }
+  .phone.light-mode ::-webkit-scrollbar-track { background: #f5f5f5; }
+
+  .shifts-screen {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Responsive */
+  @media (max-width: 380px) {
+    .shifts-screen { padding: 16px 16px 16px; gap: 16px; }
+    .shift-offer-card.visible { padding: 20px 16px 18px; }
+    .card.visible { padding: 20px 16px 18px; }
+    .card-next.visible { padding: 12px 16px 12px; }
+    .menu-fab { width: 40px; height: 40px; top: 16px; left: 16px; }
+    .menu-fab .material-icons { font-size: 24px; }
+    .jobs-screen { padding: 16px 0 16px; }
+    .trip-detail-screen { padding: 16px 16px 100px; }
+    .trip-progress-screen { padding: 16px 16px 100px; }
+    .trip-progress-dropoff-screen { padding: 16px 16px 100px; }
+    .trip-summary-screen { padding: 16px 16px 100px; }
+    .alerts-screen { padding: 16px 0 16px; }
+    .map-controls { top: 16px; padding: 0 12px; gap: 10px; }
+    .map-menu-btn { width: 40px; height: 40px; }
+    .map-menu-btn .material-icons { font-size: 24px; }
+    .map-search-bar { padding: 12px 14px; font-size: 14px; }
+    .menu-screen { padding: 16px 16px 20px; }
+    .menu-header { padding: 14px 0 10px; }
+    .menu-header span { font-size: 18px; }
+    .menu-header svg { width: 20px; height: 20px; }
+    .menu-item { font-size: 15px; padding: 14px 0; }
+    .menu-item .material-icons { font-size: 20px; }
+    .toggle-switch { width: 40px; height: 22px; }
+    .toggle-switch .toggle-knob { width: 18px; height: 18px; }
+    .toggle-switch .toggle-knob { left: 20px; }
+    .toggle-switch.active .toggle-knob { left: 2px; }
+    .shift-offer-card .date-section .day-number,
+    .shift-offer-card .date-section .month-year,
+    .shift-offer-card .date-section .day-name { font-size: 15px; }
+    .shift-offer-card .date-section { gap: 10px; padding-bottom: 10px; margin-bottom: 14px; }
+    .card .date-section .day-number,
+    .card .date-section .month-year,
+    .card .date-section .day-name { font-size: 15px; }
+    .card .date-section { gap: 10px; padding-bottom: 10px; margin-bottom: 14px; }
+    .card-next .date-section-next .day-number,
+    .card-next .date-section-next .month-year,
+    .card-next .date-section-next .day-name { font-size: 15px; }
+    .card-next .date-section-next { gap: 10px; }
+    .car-icon-btn { width: 30px; height: 30px; }
+    .car-icon-btn .material-icons { font-size: 17px; }
+    .shift-offer-card .time-row { padding: 8px 0; gap: 6px; }
+    .shift-offer-card .time-row .time-block .label { font-size: 15px; }
+    .shift-offer-card .time-row .time-block .value { font-size: 14px; }
+    .shift-offer-card .time-row .duration-center .duration-value { font-size: 12px; }
+    .card .time-row { padding: 8px 0; gap: 6px; }
+    .card .time-row .time-block .label { font-size: 15px; }
+    .card .time-row .time-block .value { font-size: 14px; }
+    .card .time-row .duration-center .duration-value { font-size: 12px; }
+    .card-next .time-row-next { padding: 4px 0; gap: 6px; }
+    .card-next .time-row-next .time-block-next .label { font-size: 15px; }
+    .card-next .time-row-next .time-block-next .value { font-size: 14px; }
+    .card-next .time-row-next .duration-center-next .duration-value { font-size: 12px; }
+    .shift-offer-card .staging-label { font-size: 15px; }
+    .shift-offer-card .staging-value { font-size: 14px; }
+    .card .staging-label { font-size: 15px; }
+    .card .staging-value { font-size: 14px; }
+    .shift-offer-card .box-value { font-size: 19px; }
+    .shift-offer-card .box-label { font-size: 12px; }
+    .shift-offer-card .box-row .box:first-child { padding-right: 25px; }
+    .shift-offer-card .box-row .box:last-child { padding-left: 25px; }
+    .shift-offer-card .box-row .vehicle-icon-center { width: 34px; height: 34px; }
+    .shift-offer-card .box-row .vehicle-icon-center .material-icons { font-size: 18px; }
+    .card .box-value { font-size: 19px; }
+    .card .box-label { font-size: 12px; }
+    .card .box-row .box:first-child { padding-right: 25px; }
+    .card .box-row .box:last-child { padding-left: 25px; }
+    .card .box-row .vehicle-icon-center { width: 34px; height: 34px; }
+    .card .box-row .vehicle-icon-center .material-icons { font-size: 18px; }
+    .card-next .box-value-next { font-size: 17px; }
+    .card-next .box-label-next { font-size: 12px; }
+    .card-next .box-row-next .box:first-child { padding-right: 24px; }
+    .card-next .box-row-next .box:last-child { padding-left: 24px; }
+    .card-next .box-row-next .vehicle-icon-center-next { width: 30px; height: 30px; }
+    .card-next .box-row-next .vehicle-icon-center-next .material-icons { font-size: 16px; }
+    .card-next .vehicle-section.show { max-height: 100px; }
+    .shift-offer-card .accept-btn { font-size: 15px; padding: 14px; }
+    .card .shift-btn { font-size: 15px; padding: 14px; }
+    .card-next .button-row .btn-accept { font-size: 15px; padding: 12px; }
+    .card-next .button-row .btn-cancel { font-size: 15px; padding: 12px; }
+    .navbar { padding: 12px 0 18px; }
+    .nav-item .material-icons { font-size: 22px; }
+    .nav-item span { font-size: 10px; }
+    .day-cell .day-name { font-size: 12px; }
+    .day-cell .day-num { font-size: 18px; }
+    .date-banner { font-size: 18px; padding: 12px 16px; }
+    .job-location { font-size: 15px; }
+    .job-time { font-size: 13px; }
+    .job-card { padding: 14px 16px; }
+    .btn-navigate { font-size: 13px; padding: 8px 14px; }
+    .completed-icon { width: 64px; height: 64px; }
+    .completed-icon .material-icons { font-size: 36px; }
+    .completed-title { font-size: 20px; }
+    .location-summary .location-text .address { font-size: 14px; }
+    .modal-card { padding: 24px 20px 20px; }
+    .modal-card h3 { font-size: 16px; }
+    .modal-card .modal-icon { width: 48px; height: 48px; }
+    .modal-card .modal-icon .material-icons { font-size: 28px; }
+    .alert-item .alert-content .alert-title { font-size: 14px; }
+    .alert-item .alert-icon { width: 34px; height: 34px; }
+    .alert-item .alert-icon .material-icons { font-size: 17px; }
+    .custom-pin { width: 24px; height: 24px; }
+    .custom-pin .material-icons { font-size: 14px; }
+    .pin-label { font-size: 9px; }
+    .shifts-empty { font-size: 16px; min-height: 150px; }
+    .jobs-empty { font-size: 16px; min-height: 150px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="phone" id="appContainer">
+
+  <!-- =========================================================
+     SCREEN: SHIFTS
+     ========================================================= -->
+  <div class="screen active" id="screen-shifts">
+    <div class="shifts-screen" id="shiftsScroll">
+      
+      <button class="menu-fab" onclick="showScreen('menu')">
+        <span class="material-icons">menu</span>
+      </button>
+
+      <div id="shiftsEmpty" class="shifts-empty">No shifts available. Waiting for assignment...</div>
+
+      <!-- SHIFT OFFER CARD - PARA ACEPTAR -->
+      <div class="shift-offer-card" id="shiftOfferCard">
+        <div class="date-section">
+          <span class="day-number" id="offer-day"></span>
+          <span class="month-year" id="offer-month-year"></span>
+          <span class="day-name" id="offer-day-name"></span>
+        </div>
+
+        <div class="time-row">
+          <div class="time-block">
+            <span class="label">Check in</span>
+            <span class="value">11:00 AM</span>
+          </div>
+          <div class="duration-center">
+            <span class="duration-value">12 hr</span>
+          </div>
+          <div class="time-block check-out">
+            <span class="label">Check out</span>
+            <span class="value">11:00 PM</span>
+          </div>
+        </div>
+
+        <div class="divider-dashed"></div>
+
+        <div class="staging-row">
+          <div class="staging-text">
+            <div class="staging-label">Staging Area</div>
+            <div class="staging-value" style="font-weight: 400;">NYNJHOT-Waldorf Astoria New York (VIP)</div>
+          </div>
+          <button class="nav-button">
+            <svg viewBox="0 0 24 24"><path d="M12 2l7 20-7-4-7 4z"/></svg>
+          </button>
+        </div>
+
+        <div class="divider-dashed"></div>
+
+        <div class="box-row">
+          <div class="divider-line"></div>
+          <div class="vehicle-icon-center">
+            <span class="material-icons">directions_car</span>
+          </div>
+          <div class="box">
+            <div class="box-value">N129</div>
+            <div class="box-label">Fleet No.</div>
+          </div>
+          <div class="box">
+            <div class="box-value">9XTH525</div>
+            <div class="box-label">Hyundai Palisade</div>
+          </div>
+        </div>
+
+        <button class="accept-btn" id="acceptOfferBtn" onclick="acceptOfferShift()">Accept Shift</button>
+      </div>
+
+      <!-- TODAY SHIFT CARD - DESPUÉS DE ACEPTAR -->
+      <div class="card" id="todayShiftCard">
+        <div class="date-section">
+          <span class="day-number" id="today-day"></span>
+          <span class="month-year" id="today-month-year"></span>
+          <span class="day-name" id="today-day-name"></span>
+        </div>
+
+        <div class="time-row">
+          <div class="time-block">
+            <span class="label">Check in</span>
+            <span class="value">11:00 AM</span>
+          </div>
+          <div class="duration-center">
+            <span class="duration-value">12 hr</span>
+          </div>
+          <div class="time-block check-out">
+            <span class="label">Check out</span>
+            <span class="value">11:00 PM</span>
+          </div>
+        </div>
+
+        <div class="divider-dashed"></div>
+
+        <div class="staging-row">
+          <div class="staging-text">
+            <div class="staging-label">Staging Area</div>
+            <div class="staging-value" style="font-weight: 400;">NYNJHOT-Waldorf Astoria New York (VIP)</div>
+          </div>
+          <button class="nav-button">
+            <svg viewBox="0 0 24 24"><path d="M12 2l7 20-7-4-7 4z"/></svg>
+          </button>
+        </div>
+
+        <div class="divider-dashed"></div>
+
+        <div class="box-row">
+          <div class="divider-line"></div>
+          <div class="vehicle-icon-center">
+            <span class="material-icons">directions_car</span>
+          </div>
+          <div class="box">
+            <div class="box-value">N129</div>
+            <div class="box-label">Fleet No.</div>
+          </div>
+          <div class="box">
+            <div class="box-value">9XTH525</div>
+            <div class="box-label">Hyundai Palisade</div>
+          </div>
+        </div>
+
+        <button class="shift-btn" id="startTodayBtn" onclick="toggleShift()">Start Shift</button>
+      </div>
+
+      <!-- NEXT SHIFT CARD - DESPUÉS DE ACEPTAR EL DE MAÑANA -->
+      <div class="card-next" id="nextShiftCard">
+        <div class="date-section-next">
+          <span class="day-number" id="next-day"></span>
+          <span class="month-year" id="next-month-year"></span>
+          <span class="day-name" id="next-day-name"></span>
+          
+          <button class="car-icon-btn" onclick="showVehicle()">
+            <span class="material-icons">directions_car</span>
+          </button>
+        </div>
+
+        <div class="time-row-next" id="timeRowNext">
+          <div class="time-block-next">
+            <span class="label">Check in</span>
+            <span class="value">11:00 AM</span>
+          </div>
+          <div class="duration-center-next">
+            <span class="duration-value">12 hr</span>
+          </div>
+          <div class="time-block-next check-out">
+            <span class="label">Check out</span>
+            <span class="value">11:00 PM</span>
+          </div>
+        </div>
+
+        <div class="vehicle-section" id="vehicleSection">
+          <div class="box-row-next">
+            <div class="divider-line-next"></div>
+            <div class="vehicle-icon-center-next">
+              <span class="material-icons">directions_car</span>
+            </div>
+            <div class="box">
+              <div class="box-value-next">N129</div>
+              <div class="box-label-next">Fleet No.</div>
+            </div>
+            <div class="box">
+              <div class="box-value-next">9XTH525</div>
+              <div class="box-label-next">Hyundai Palisade</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="button-row" id="buttonRow">
+          <button class="btn-accept" onclick="acceptNextShift()">Accept</button>
+          <button class="btn-cancel" onclick="cancelNextShift()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+     SCREEN: JOBS
+     ========================================================= -->
+  <div class="screen" id="screen-jobs">
+    <div class="jobs-screen">
+      
+      <button class="menu-fab" onclick="showScreen('menu')">
+        <span class="material-icons">menu</span>
+      </button>
+
+      <div class="jobs-title">Jobs</div>
+
+      <div id="jobsEmpty" class="jobs-empty">No trips available. Accept a shift first.</div>
+
+      <div id="jobsContent" class="jobs-content">
+        <div class="day-strip" id="dayStrip"></div>
+        <div class="date-banner" id="dateBanner"></div>
+        <div class="jobs-list-container" id="jobsListContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+     SCREEN: TRIP DETAIL
+     ========================================================= -->
+  <div class="screen" id="screen-tripdetail">
+    <div class="trip-detail-screen">
+      
+      <div class="back-header" onclick="closeTripDetail()">
+        <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        <span>Trip Details</span>
+      </div>
+
+      <div class="staging-section">
+        <div class="staging-text">
+          <div class="staging-label">Be there by</div>
+          <div class="staging-value" id="beThereBy">
+            <span class="material-icons">access_time</span>
+            <span id="beThereByText"></span>
+          </div>
+        </div>
+        <button class="staging-nav-button">
+          <svg viewBox="0 0 24 24"><path d="M12 2l7 20-7-4-7 4z"/></svg>
+        </button>
+      </div>
+
+      <div id="tripDetailContent"></div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================
+     SCREEN: PICKUP (Trip Flow - Step 1)
+     ========================================================= -->
+  <div class="screen" id="screen-pickup">
+    <div class="trip-progress-screen">
+      
+      <div class="back-header" onclick="showScreen('jobs')">
+        <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        <span>Trip in Progress</span>
+      </div>
+
+      <div class="staging-section" id="stagingSection">
+        <div class="staging-text">
+          <div class="staging-label" id="stagingLabel">Be there by</div>
+          <div class="staging-value" id="stagingValue">
+            <span class="material-icons">access_time</span>
+            <span id="timerDisplay"></span>
+          </div>
+        </div>
+        <button class="staging-nav-button" id="stagingNavBtn" onclick="openWazePickup()">
+          <svg viewBox="0 0 24 24"><path d="M12 2l7 20-7-4-7 4z"/></svg>
+        </button>
+      </div>
+
+      <div class="trip-item">
+        <div class="icon-wrapper">
+          <div class="location-icon pickup"></div>
+        </div>
+        <div class="location-name" id="pickupName"></div>
+        <div class="location-time" id="pickupTime"></div>
+      </div>
+
+      <div class="navigate-btn-wrapper" id="navigateWrapper">
+        <button class="btn-navigate" onclick="openWazePickup()">Navigate</button>
+      </div>
+
+      <div class="divider-light" style="margin: 18px 0 18px 0; border-top: 1px solid rgba(255,255,255,0.08);"></div>
+
+      <div class="detail-section-title">Customer Details</div>
+      <div class="customer-list" id="pickupCustomerList"></div>
+
+      <div class="divider-light" style="margin: 18px 0 18px 0; border-top: 1px solid rgba(255,255,255,0.08);"></div>
+
+      <div class="detail-section-title" style="cursor: default;">Flight Details</div>
+      <div id="pickupFlightDetails"></div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================
+     SCREEN: DROPOFF (Trip Flow - Step 2)
+     ========================================================= -->
+  <div class="screen" id="screen-dropoff">
+    <div class="trip-progress-dropoff-screen">
+      
+      <div class="back-header" onclick="showScreen('jobs')">
+        <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        <span>Trip in Progress</span>
+      </div>
+
+      <div class="trip-item">
+        <div class="icon-wrapper">
+          <div class="location-icon dropoff"></div>
+        </div>
+        <div class="location-name" id="dropoffName"></div>
+        <div class="location-time" id="dropoffTime"></div>
+      </div>
+
+      <div class="navigate-btn-wrapper" id="navigateWrapperDropoff">
+        <button class="btn-navigate" onclick="openWazeDropoff()">Navigate</button>
+      </div>
+
+      <div class="divider-light" style="margin: 18px 0 18px 0; border-top: 1px solid rgba(255,255,255,0.08);"></div>
+
+      <div class="detail-section-title-clickable" onclick="toggleCustomersDropoff()">
+        <span>Customer Details</span>
+        <span class="material-icons" id="arrowIconDropoff">expand_more</span>
+      </div>
+
+      <div class="customer-list-collapsible" id="customerListDropoff"></div>
+
+      <div class="divider-light" style="margin: 18px 0 18px 0; border-top: 1px solid rgba(255,255,255,0.08);"></div>
+
+      <div class="detail-section-title" style="cursor: default;">Flight Details</div>
+      <div id="dropoffFlightDetails"></div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================
+     SCREEN: SUMMARY (Trip Flow - Step 3)
+     ========================================================= -->
+  <div class="screen" id="screen-summary">
+    <div class="trip-summary-screen">
+      
+      <div class="back-header" onclick="showScreen('jobs')">
+        <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        <span>Trip Summary</span>
+      </div>
+
+      <div class="completed-icon">
+        <span class="material-icons">check_circle</span>
+      </div>
+
+      <div class="completed-title">Trip Completed</div>
+      <div class="completed-sub">All passengers processed successfully</div>
+
+      <div class="trip-info-card">
+        <div class="info-row">
+          <span class="label">Trip ID</span>
+          <span class="value" id="summaryTripId"></span>
+        </div>
+        <div class="info-row">
+          <span class="label">Date</span>
+          <span class="value" id="summaryDate"></span>
+        </div>
+        <div class="info-row">
+          <span class="label">Vehicle</span>
+          <span class="value">N129 · Hyundai Palisade</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Plate</span>
+          <span class="value">9XTH525</span>
+        </div>
+      </div>
+
+      <div class="trip-info-card">
+        <div class="location-summary">
+          <div class="dot pickup"></div>
+          <div class="location-text">
+            <div class="address" id="summaryPickupName"></div>
+            <div class="time" id="summaryPickupTime"></div>
+          </div>
+          <span class="status completed">Completed</span>
+        </div>
+        <div class="location-summary">
+          <div class="dot dropoff"></div>
+          <div class="location-text">
+            <div class="address" id="summaryDropoffName"></div>
+            <div class="time" id="summaryDropoffTime"></div>
+          </div>
+          <span class="status completed">Completed</span>
+        </div>
+      </div>
+
+      <div class="detail-section-title" style="cursor: default;">Customer Details</div>
+      <div class="customer-list" id="summaryCustomerList"></div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================
+     SCREEN: MAP
+     ========================================================= -->
+  <div class="screen" id="screen-map">
+    <div class="map-screen">
+      <div class="map-container">
+        <div id="map"></div>
+      </div>
+      
+      <div class="map-controls">
+        <button class="map-menu-btn" onclick="showScreen('menu')">
+          <span class="material-icons">menu</span>
+        </button>
+        
+        <div class="map-search-bar">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+          Search location...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+     SCREEN: ALERTS
+     ========================================================= -->
+  <div class="screen" id="screen-notifications">
+    <div class="alerts-screen">
+      
+      <button class="menu-fab" onclick="showScreen('menu')" style="position:absolute; top:20px; left:20px; z-index:100;">
+        <span class="material-icons">menu</span>
+      </button>
+
+      <div class="alerts-header">
+        <h2>Alerts</h2>
+      </div>
+
+      <div class="alerts-list" id="alertsList"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+     SCREEN: MENU
+     ========================================================= -->
+  <div class="screen" id="screen-menu">
+    <div class="menu-screen">
+      
+      <div class="menu-header" onclick="showScreen('shifts')">
+        <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        <span>Menu</span>
+      </div>
+
+      <div class="menu-items">
+        <div class="menu-item"><span class="material-icons">person</span> My Profile</div>
+        <div class="menu-item"><span class="material-icons">help</span> Support</div>
+        <div class="menu-item" onclick="toggleDarkMode()">
+          <span class="material-icons" id="modeIcon">dark_mode</span> Dark Mode
+          <div class="toggle-switch" id="darkModeToggle">
+            <div class="toggle-knob"></div>
+          </div>
+        </div>
+        <div class="menu-item"><span class="material-icons">settings</span> Settings</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+     BOTONES FLOTANTES
+     ========================================================= -->
+  <div class="btn-wrapper" id="btnWrapperPickup" style="display: none;">
+    <button class="btn-arrived" id="actionBtnPickup" onclick="handleActionPickup()">Arrived Pickup</button>
+  </div>
+
+  <div class="btn-wrapper" id="btnWrapperDropoff" style="display: none;">
+    <button class="btn-arrived" id="actionBtnDropoff" onclick="handleActionDropoff()">Arrived Dropoff</button>
+  </div>
+
+  <div class="btn-wrapper" id="btnWrapperSummary" style="display: none;">
+    <button class="btn-complete" onclick="completeTrip()">Complete</button>
+  </div>
+
+  <div class="start-btn-wrapper" id="startBtnWrapper">
+    <button class="start-btn" id="startBtn" onclick="startTripFromDetail()">Start</button>
+  </div>
+
+  <!-- =========================================================
+     MODAL
+     ========================================================= -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <div class="modal-icon"><span class="material-icons">person</span></div>
+      <h3 id="modalName"></h3>
+      <div class="modal-sub">Is this passenger in the vehicle?</div>
+      <div class="modal-buttons">
+        <button class="modal-btn yes" onclick="confirmPassenger(true)">Yes, on board</button>
+        <button class="modal-btn no-show" onclick="confirmPassenger(false)">No Show</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+     NAVBAR - FIFA BLUE
+     ========================================================= -->
+  <div class="navbar" id="mainNavbar">
+    <button class="nav-item active" data-screen="shifts" onclick="selectNavItem('shifts', this)">
+      <span class="material-icons">event_note</span><span>Shifts</span>
+    </button>
+    <button class="nav-item" data-screen="jobs" onclick="selectNavItem('jobs', this)">
+      <span class="material-icons">work</span><span>Jobs</span>
+    </button>
+    <button class="nav-item" data-screen="map" onclick="selectNavItem('map', this)">
+      <span class="material-icons">map</span><span>Map</span>
+    </button>
+    <button class="nav-item" data-screen="notifications" onclick="selectNavItem('notifications', this)">
+      <span class="material-icons" style="position:relative;">
+        notifications
+        <span class="badge" id="alertBadge">0</span>
+      </span>
+      <span>Alerts</span>
+    </button>
+  </div>
+
+</div>
+
+<script>
+  // =========================================================
+  //  DATA HELPERS
+  // =========================================================
+  function getWeekday(date) {
+    const weekdays = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    return weekdays[date.getDay()];
+  }
+
+  function getWeekdayShort(date) {
+    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return weekdays[date.getDay()];
+  }
+
+  function getMonthShort(date) {
+    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    return months[date.getMonth()];
+  }
+
+  function formatDateFull(date) {
+    const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    return `${weekdays[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  }
+
+  // =========================================================
+  //  DATA GENERATION
+  // =========================================================
+  const playerNames = [
+    'Lionel Messi', 'Cristiano Ronaldo', 'Neymar Jr', 'Kylian Mbappe', 'Erling Haaland',
+    'Robert Lewandowski', 'Kevin De Bruyne', 'Virgil van Dijk', 'Sadio Mane', 'Mohamed Salah',
+    'Karim Benzema', 'Luka Modric', 'Toni Kroos', 'Sergio Ramos', 'Gianluigi Buffon',
+    'Zlatan Ibrahimovic', 'Wayne Rooney', 'Andres Iniesta', 'Xavi Hernandez', 'Ronaldinho',
+    'Thiago Silva', 'Marquinhos', 'Achraf Hakimi', 'Gianluigi Donnarumma', 'Marco Verratti'
+  ];
+
+  const destinations = [
+    { name: 'Waldorf Astoria', type: 'hotel' },
+    { name: 'LGA - LaGuardia Airport', type: 'airport', terminal: 'Terminal B' },
+    { name: 'JFK - John F. Kennedy Airport', type: 'airport', terminal: 'Terminal 4' },
+    { name: 'MetLife Stadium - P0', type: 'stadium' },
+    { name: 'MetLife Stadium - P1', type: 'stadium' },
+    { name: 'MetLife Stadium - P2', type: 'stadium' },
+  ];
+
+  const airlines = ['Delta Airlines', 'American Airlines', 'United Airlines', 'JetBlue Airways', 'Spirit Airlines'];
+
+  function generateTripsForDay(date, count = 3) {
+    const trips = [];
+    const shuffledPlayers = [...playerNames].sort(() => Math.random() - 0.5);
+    const dests = [...destinations];
+    
+    let usedPairs = [];
+    let attempts = 0;
+    let generated = 0;
+    
+    while (generated < count && attempts < 100) {
+      attempts++;
+      const i = generated % dests.length;
+      const pickup = dests[i % dests.length];
+      let dropoff = dests[(i + 1 + Math.floor(Math.random() * 2)) % dests.length];
+      
+      // NO permitir aeropuerto a estadio ni estadio a aeropuerto
+      if ((pickup.type === 'airport' && dropoff.type === 'stadium') || 
+          (pickup.type === 'stadium' && dropoff.type === 'airport') ||
+          (pickup.type === 'airport' && dropoff.type === 'airport')) {
+        continue;
+      }
+      
+      const pairKey = `${pickup.name}|${dropoff.name}`;
+      if (usedPairs.includes(pairKey)) continue;
+      usedPairs.push(pairKey);
+      
+      const hour = 5 + generated * 2;
+      const minute = [0, 20, 40][generated % 3];
+      const ampm = hour < 12 ? 'AM' : 'PM';
+      const displayHour = hour > 12 ? hour - 12 : hour;
+      const timeStr = `${displayHour}:${String(minute).padStart(2, '0')} ${ampm}`;
+      
+      const beThereByHour = hour - 1;
+      const beThereByAmpm = beThereByHour < 12 ? 'AM' : 'PM';
+      const beThereByDisplay = beThereByHour > 12 ? beThereByHour - 12 : beThereByHour;
+      const beThereByStr = `${beThereByDisplay}:${String(minute).padStart(2, '0')} ${beThereByAmpm}`;
+      
+      const passengerCount = 1 + Math.floor(Math.random() * 2);
+      const passengers = shuffledPlayers.slice(generated * 2, generated * 2 + passengerCount);
+      
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      const tripId = `#TR-${dateStr}-${String(generated + 1).padStart(3, '0')}`;
+      
+      const isAirport = dropoff.type === 'airport';
+      
+      trips.push({
+        id: tripId,
+        pickup: { name: pickup.name, time: timeStr },
+        dropoff: { name: dropoff.name, time: timeStr },
+        beThereBy: beThereByStr,
+        customers: passengers,
+        airline: isAirport ? airlines[Math.floor(Math.random() * airlines.length)] : null,
+        flight: isAirport ? `${['DL', 'AA', 'UA', 'B6', 'NK'][Math.floor(Math.random() * 5)]} ${100 + Math.floor(Math.random() * 900)}` : null,
+        terminal: isAirport ? (dropoff.terminal || 'Terminal ' + String.fromCharCode(65 + Math.floor(Math.random() * 6))) : null,
+        type: dropoff.type
+      });
+      generated++;
+    }
+    return trips;
+  }
+
+  // =========================================================
+  //  ESTADO GLOBAL
+  // =========================================================
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  let state = {
+    todayOffer: { visible: false, accepted: false, started: false },
+    tomorrowOffer: { visible: false, accepted: false },
+    todayTrips: [],
+    tomorrowTrips: [],
+    alerts: [],
+    alertCount: 0
+  };
+
+  let currentTripIndex = null;
+  let currentTripData = null;
+  let currentDayIndex = 0;
+
+  // =========================================================
+  //  TOAST
+  // =========================================================
+  let toastTimeout;
+
+  function showToast(message, icon = 'check_circle') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    const toastIcon = document.getElementById('toast-icon');
+    const toastMessage = document.getElementById('toast-message');
+    
+    toastIcon.textContent = icon;
+    toastMessage.textContent = message;
+    toast.classList.add('show');
+    
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2500);
+  }
+
+  // =========================================================
+  //  DARK MODE
+  // =========================================================
+  function toggleDarkMode() {
+    const container = document.getElementById('appContainer');
+    const toggle = document.getElementById('darkModeToggle');
+    const icon = document.getElementById('modeIcon');
+    
+    container.classList.toggle('light-mode');
+    toggle.classList.toggle('active');
+    icon.textContent = container.classList.contains('light-mode') ? 'light_mode' : 'dark_mode';
+  }
+
+  // =========================================================
+  //  NAVEGACIÓN
+  // =========================================================
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('screen-' + name);
+    if (target) target.classList.add('active');
+    
+    document.body.className = '';
+    document.body.classList.add('screen-' + name + '-active');
+    
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const navItem = document.querySelector(`.nav-item[data-screen="${name}"]`);
+    if (navItem) navItem.classList.add('active');
+
+    document.getElementById('btnWrapperPickup').style.display = 'none';
+    document.getElementById('btnWrapperDropoff').style.display = 'none';
+    document.getElementById('btnWrapperSummary').style.display = 'none';
+    document.getElementById('startBtnWrapper').classList.remove('visible');
+    
+    if (name === 'pickup') {
+      document.getElementById('btnWrapperPickup').style.display = 'block';
+    } else if (name === 'dropoff') {
+      document.getElementById('btnWrapperDropoff').style.display = 'block';
+    } else if (name === 'summary') {
+      document.getElementById('btnWrapperSummary').style.display = 'block';
+    } else if (name === 'tripdetail') {
+      document.getElementById('startBtnWrapper').classList.add('visible');
+    }
+  }
+
+  function selectNavItem(screen, btn) {
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    btn.classList.add('active');
+    showScreen(screen);
+  }
+
+  // =========================================================
+  //  ALERTS
+  // =========================================================
+  function addAlert(title, subtitle, icon = 'notifications') {
+    state.alerts.unshift({ title, subtitle, icon, read: false, timestamp: new Date() });
+    state.alertCount++;
+    updateAlertsUI();
+    updateBadge();
+  }
+
+  function updateAlertsUI() {
+    const list = document.getElementById('alertsList');
+    list.innerHTML = '';
+    
+    state.alerts.forEach((alert) => {
+      const item = document.createElement('div');
+      item.className = `alert-item${alert.read ? ' read' : ''}`;
+      item.innerHTML = `
+        <div class="alert-icon"><span class="material-icons">${alert.icon}</span></div>
+        <div class="alert-content">
+          <div class="alert-title">${alert.title}</div>
+          <div class="alert-sub">${alert.subtitle}</div>
+        </div>
+        <div class="alert-status"><span class="dot${alert.read ? ' read' : ''}"></span></div>
+      `;
+      item.addEventListener('click', function() {
+        if (!alert.read) {
+          alert.read = true;
+          state.alertCount--;
+          updateAlertsUI();
+          updateBadge();
+        }
+      });
+      list.appendChild(item);
+    });
+  }
+
+  function updateBadge() {
+    const badge = document.getElementById('alertBadge');
+    if (state.alertCount > 0) {
+      badge.textContent = state.alertCount;
+      badge.classList.remove('hidden');
+    } else {
+      badge.textContent = '0';
+      badge.classList.add('hidden');
+    }
+  }
+
+  // =========================================================
+  //  SHIFTS - OFFER CARD
+  // =========================================================
+  function updateOfferCard(date, isTomorrow = false) {
+    const day = isTomorrow ? tomorrow : today;
+    document.getElementById('offer-day').textContent = day.getDate();
+    document.getElementById('offer-month-year').textContent = `${getMonthShort(day)} ${day.getFullYear()}`;
+    document.getElementById('offer-day-name').textContent = getWeekday(day);
+  }
+
+  function acceptOfferShift() {
+    const offerCard = document.getElementById('shiftOfferCard');
+    const todayCard = document.getElementById('todayShiftCard');
+    const emptyMsg = document.getElementById('shiftsEmpty');
+    
+    offerCard.classList.remove('visible');
+    emptyMsg.classList.add('hidden');
+    
+    // Generar viajes del día
+    state.todayTrips = generateTripsForDay(today, 3);
+    state.todayOffer.accepted = true;
+    
+    // Mostrar el card de hoy con "Start Shift"
+    todayCard.classList.add('visible');
+    
+    addAlert('Shift Accepted', `Today's shift at ${formatDateFull(today)} has been accepted`, 'check_circle');
+    
+    // Enviar alertas de jobs
+    state.todayTrips.forEach((trip, index) => {
+      setTimeout(() => {
+        addAlert('New Job Available', `${trip.pickup.name} → ${trip.dropoff.name}`, 'work');
+      }, index * 3000);
+    });
+    
+    updateJobsUI();
+  }
+
+  // =========================================================
+  //  SHIFTS - TODAY SHIFT (START / END)
+  // =========================================================
+  let isShiftActive = false;
+
+  function toggleShift() {
+    const btn = document.getElementById('startTodayBtn');
+    if (!isShiftActive) {
+      isShiftActive = true;
+      btn.textContent = 'End Shift';
+      btn.classList.add('end');
+      state.todayOffer.started = true;
+      addAlert('Shift Started', `Today's shift at ${formatDateFull(today)} has started`, 'play_arrow');
+    } else {
+      isShiftActive = false;
+      btn.textContent = 'Start Shift';
+      btn.classList.remove('end');
+      addAlert('Shift Ended', `Today's shift at ${formatDateFull(today)} has ended`, 'stop');
+    }
+  }
+
+  // =========================================================
+  //  SHIFTS - NEXT SHIFT (ACEPTAR)
+  // =========================================================
+  function showVehicle() {
+    const section = document.getElementById('vehicleSection');
+    section.classList.add('show');
+    clearTimeout(vehicleTimeout);
+    vehicleTimeout = setTimeout(() => section.classList.remove('show'), 3000);
+  }
+
+  let vehicleTimeout;
+
+  function acceptNextShift() {
+    const card = document.getElementById('nextShiftCard');
+    const buttonRow = document.getElementById('buttonRow');
+    const timeRow = document.getElementById('timeRowNext');
+    
+    buttonRow.style.display = 'none';
+    timeRow.style.marginBottom = '0';
+    card.classList.add('accepted');
+    state.tomorrowOffer.accepted = true;
+    
+    // Generar viajes para mañana
+    state.tomorrowTrips = generateTripsForDay(tomorrow, 3);
+    
+    addAlert('Shift Accepted', `Tomorrow's shift at ${formatDateFull(tomorrow)} has been accepted`, 'check_circle');
+    
+    state.tomorrowTrips.forEach((trip, index) => {
+      setTimeout(() => {
+        addAlert('New Job Available', `${trip.pickup.name} → ${trip.dropoff.name}`, 'work');
+      }, index * 3000);
+    });
+    
+    updateJobsUI();
+  }
+
+  function cancelNextShift() {
+    const card = document.getElementById('nextShiftCard');
+    card.classList.add('hidden');
+    card.classList.remove('visible');
+    setTimeout(() => card.style.display = 'none', 400);
+    addAlert('Shift Cancelled', `Tomorrow's shift at ${formatDateFull(tomorrow)} was cancelled`, 'cancel');
+  }
+
+  // =========================================================
+  //  JOBS
+  // =========================================================
+  function updateJobsUI() {
+    const jobsEmpty = document.getElementById('jobsEmpty');
+    const jobsContent = document.getElementById('jobsContent');
+    const dayStrip = document.getElementById('dayStrip');
+    const dateBanner = document.getElementById('dateBanner');
+    const jobsListContainer = document.getElementById('jobsListContainer');
+    
+    dayStrip.innerHTML = '';
+    jobsListContainer.innerHTML = '';
+    
+    // Verificar si hay viajes disponibles
+    const hasTodayTrips = state.todayOffer.accepted && state.todayTrips.length > 0;
+    const hasTomorrowTrips = state.tomorrowOffer.accepted && state.tomorrowTrips.length > 0;
+    
+    if (!hasTodayTrips && !hasTomorrowTrips) {
+      jobsEmpty.classList.remove('hidden');
+      jobsContent.classList.remove('visible');
+      return;
+    }
+    
+    jobsEmpty.classList.add('hidden');
+    jobsContent.classList.add('visible');
+    
+    // Construir days array
+    const days = [];
+    if (hasTodayTrips) {
+      days.push({ date: today, label: formatDateFull(today), short: getWeekdayShort(today), index: 0 });
+    }
+    if (hasTomorrowTrips) {
+      days.push({ date: tomorrow, label: formatDateFull(tomorrow), short: getWeekdayShort(tomorrow), index: 1 });
+    }
+    
+    // Crear day strip
+    days.forEach((day, index) => {
+      const cell = document.createElement('div');
+      cell.className = 'day-cell' + (index === 0 ? ' active' : '');
+      cell.dataset.index = day.index;
+      cell.dataset.label = day.label;
+      cell.innerHTML = `
+        <div class="day-name">${day.short}</div>
+        <div class="day-num">${day.date.getDate()}</div>
+      `;
+      cell.addEventListener('click', function() {
+        document.querySelectorAll('.day-cell').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        dateBanner.textContent = this.dataset.label;
+        renderTripsForDay(parseInt(this.dataset.index));
+      });
+      dayStrip.appendChild(cell);
+    });
+    
+    // Mostrar primer día
+    dateBanner.textContent = days[0].label;
+    renderTripsForDay(days[0].index);
+  }
+
+  function renderTripsForDay(dayIndex) {
+    const jobsListContainer = document.getElementById('jobsListContainer');
+    jobsListContainer.innerHTML = '';
+    
+    let trips = [];
+    if (dayIndex === 0 && state.todayOffer.accepted) {
+      trips = state.todayTrips;
+    } else if (dayIndex === 1 && state.tomorrowOffer.accepted) {
+      trips = state.tomorrowTrips;
+    }
+    
+    if (!trips || trips.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'jobs-empty';
+      empty.textContent = 'No trips available for this day.';
+      jobsListContainer.appendChild(empty);
+      return;
+    }
+    
+    trips.forEach((trip, index) => {
+      const card = document.createElement('div');
+      card.className = 'job-card';
+      card.dataset.tripIndex = index;
+      card.innerHTML = `
+        <div class="job-top">
+          <span class="job-location left">${trip.pickup.name}</span>
+          <span class="job-arrow">→</span>
+          <span class="job-location right">${trip.dropoff.name}</span>
+        </div>
+        <div class="job-bottom">
+          <span class="job-time left">${trip.pickup.time}</span>
+          <span class="job-time right">${trip.dropoff.time}</span>
+        </div>
+      `;
+      card.addEventListener('click', function() {
+        openTripDetail(dayIndex, index);
+      });
+      jobsListContainer.appendChild(card);
+    });
+  }
+
+  // =========================================================
+  //  TRIP DETAIL
+  // =========================================================
+  function openTripDetail(dayIndex, tripIndex) {
+    let trips = [];
+    if (dayIndex === 0 && state.todayOffer.accepted) {
+      trips = state.todayTrips;
+    } else if (dayIndex === 1 && state.tomorrowOffer.accepted) {
+      trips = state.tomorrowTrips;
+    }
+    
+    const trip = trips[tripIndex];
+    if (!trip) return;
+
+    currentTripIndex = tripIndex;
+    currentTripData = trip;
+    currentDayIndex = dayIndex;
+
+    document.getElementById('beThereByText').textContent = trip.beThereBy;
+
+    const container = document.getElementById('tripDetailContent');
+    container.innerHTML = `
+      <div class="trip-item">
+        <div class="icon-wrapper">
+          <div class="location-icon dropoff"></div>
+          <div class="location-line"></div>
+        </div>
+        <div class="location-name">${trip.dropoff.name}</div>
+        <div class="location-time">${trip.dropoff.time}</div>
+      </div>
+      <div class="divider-light"></div>
+      <div class="trip-item">
+        <div class="icon-wrapper">
+          <div class="location-icon pickup"></div>
+        </div>
+        <div class="location-name">${trip.pickup.name}</div>
+        <div class="location-time">${trip.pickup.time}</div>
+      </div>
+      <div class="divider-light" style="margin: 18px 0 18px 0; border-top: 1px solid rgba(255,255,255,0.06);"></div>
+      <div class="detail-section-title">Customer Details</div>
+      <div class="customer-list">
+        ${trip.customers.map(c => `<div class="customer-item">${c}</div>`).join('')}
+      </div>
+      ${trip.type === 'airport' ? `
+      <div class="divider-light" style="margin: 18px 0 18px 0; border-top: 1px solid rgba(255,255,255,0.06);"></div>
+      <div class="detail-section-title">Flight Details</div>
+      <div class="flight-row"><span class="label">Airline</span><span class="value">${trip.airline || 'N/A'}</span></div>
+      <div class="flight-row"><span class="label">Flight</span><span class="value">${trip.flight || 'N/A'}</span></div>
+      <div class="flight-row"><span class="label">Terminal</span><span class="value">${trip.terminal || 'N/A'}</span></div>` : ''}
+    `;
+
+    showScreen('tripdetail');
+  }
+
+  function closeTripDetail() {
+    showScreen('jobs');
+    document.querySelector('.nav-item[data-screen="jobs"]').classList.add('active');
+  }
+
+  // =========================================================
+  //  START TRIP - FLUJO COMPLETO
+  // =========================================================
+  function startTripFromDetail() {
+    const trip = currentTripData;
+    if (!trip) return;
+
+    document.getElementById('pickupName').textContent = trip.pickup.name;
+    document.getElementById('pickupTime').textContent = trip.pickup.time;
+    document.getElementById('timerDisplay').textContent = trip.beThereBy;
+    document.getElementById('dropoffName').textContent = trip.dropoff.name;
+    document.getElementById('dropoffTime').textContent = trip.dropoff.time;
+
+    const pickupList = document.getElementById('pickupCustomerList');
+    pickupList.innerHTML = '';
+    trip.customers.forEach((name, i) => {
+      const item = document.createElement('div');
+      item.className = 'customer-item';
+      item.innerHTML = `
+        <span id="pname${i+1}">${name}</span>
+        <span class="check-box" id="pcheck${i+1}" onclick="toggleCheckPickup('pcheck${i+1}')">
+          <span class="material-icons">check</span>
+        </span>
+      `;
+      pickupList.appendChild(item);
+    });
+
+    const dropoffList = document.getElementById('customerListDropoff');
+    dropoffList.innerHTML = '';
+    trip.customers.forEach((name, i) => {
+      const item = document.createElement('div');
+      item.className = 'customer-item';
+      item.innerHTML = `
+        <span id="dname${i+1}">${name}</span>
+        <span class="check-box readonly" id="dcheck${i+1}">
+          <span class="material-icons">check</span>
+        </span>
+      `;
+      dropoffList.appendChild(item);
+    });
+
+    const pickupFlight = document.getElementById('pickupFlightDetails');
+    const dropoffFlight = document.getElementById('dropoffFlightDetails');
+    if (trip.type === 'airport') {
+      const html = `
+        <div class="flight-row"><span class="label">Airline</span><span class="value">${trip.airline || 'N/A'}</span></div>
+        <div class="flight-row"><span class="label">Flight</span><span class="value">${trip.flight || 'N/A'}</span></div>
+        <div class="flight-row"><span class="label">Terminal</span><span class="value">${trip.terminal || 'N/A'}</span></div>
+      `;
+      pickupFlight.innerHTML = html;
+      dropoffFlight.innerHTML = html;
+    } else {
+      pickupFlight.innerHTML = `<div class="flight-row"><span class="label">No flight details</span></div>`;
+      dropoffFlight.innerHTML = `<div class="flight-row"><span class="label">No flight details</span></div>`;
+    }
+
+    resetPickupState();
+    customersOpenDropoff = false;
+    document.getElementById('customerListDropoff').classList.remove('open');
+    document.getElementById('arrowIconDropoff').classList.remove('rotated');
+
+    showScreen('pickup');
+  }
+
+  // =========================================================
+  //  TRIP FLOW - PICKUP
+  // =========================================================
+  let isArrivedPickup = false;
+  let timerInterval = null;
+  let timeLeft = 1500;
+
+  function resetPickupState() {
+    isArrivedPickup = false;
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    
+    const section = document.getElementById('stagingSection');
+    const label = document.getElementById('stagingLabel');
+    const value = document.getElementById('stagingValue');
+    const icon = value.querySelector('.material-icons');
+    const display = document.getElementById('timerDisplay');
+    const navWrapper = document.getElementById('navigateWrapper');
+    const navBtn = document.getElementById('stagingNavBtn');
+    const actionBtn = document.getElementById('actionBtnPickup');
+    const checkBoxes = document.querySelectorAll('#screen-pickup .check-box');
+    
+    section.classList.remove('waiting');
+    label.textContent = 'Be there by';
+    label.classList.remove('waiting');
+    icon.textContent = 'access_time';
+    value.classList.remove('waiting');
+    if (currentTripData) display.textContent = currentTripData.beThereBy;
+    checkBoxes.forEach(cb => cb.classList.remove('show', 'checked', 'no-show'));
+    navWrapper.classList.remove('hidden');
+    navBtn.style.display = 'flex';
+    actionBtn.textContent = 'Arrived Pickup';
+    actionBtn.classList.remove('start-trip');
+    actionBtn.disabled = false;
+    actionBtn.style.background = '#326295';
+  }
+
+  function openWazePickup() {
+    const address = document.getElementById('pickupName').textContent;
+    window.open(`https://waze.com/ul?q=${encodeURIComponent(address)}&navigate=yes`, '_blank');
+  }
+
+  function openWazeDropoff() {
+    const address = document.getElementById('dropoffName').textContent;
+    window.open(`https://waze.com/ul?q=${encodeURIComponent(address)}&navigate=yes`, '_blank');
+  }
+
+  function toggleCheckPickup(id) {
+    const element = document.getElementById(id);
+    if (element.classList.contains('checked') || element.classList.contains('no-show')) return;
+    element.classList.toggle('checked');
+    updatePickupButtonState();
+  }
+
+  function updatePickupButtonState() {
+    const btn = document.getElementById('actionBtnPickup');
+    const checks = document.querySelectorAll('#screen-pickup .check-box');
+    let allChecked = true;
+    checks.forEach(cb => {
+      if (!cb.classList.contains('checked') && !cb.classList.contains('no-show')) allChecked = false;
+    });
+    
+    if (allChecked) {
+      btn.textContent = 'All confirmed';
+      btn.disabled = true;
+      btn.style.background = '#34c759';
+      setTimeout(() => showDropoffScreen(), 500);
+    }
+  }
+
+  function handleActionPickup() {
+    const btn = document.getElementById('actionBtnPickup');
+    
+    if (!isArrivedPickup) {
+      const section = document.getElementById('stagingSection');
+      const label = document.getElementById('stagingLabel');
+      const value = document.getElementById('stagingValue');
+      const icon = value.querySelector('.material-icons');
+      const display = document.getElementById('timerDisplay');
+      const checkBoxes = document.querySelectorAll('#screen-pickup .check-box');
+      const navWrapper = document.getElementById('navigateWrapper');
+      const navBtn = document.getElementById('stagingNavBtn');
+      
+      btn.textContent = 'Start Trip';
+      btn.classList.add('start-trip');
+      
+      section.classList.add('waiting');
+      label.textContent = 'Waiting for passenger';
+      label.classList.add('waiting');
+      icon.textContent = 'schedule';
+      value.classList.add('waiting');
+      
+      timeLeft = 1500;
+      display.textContent = '25:00';
+      
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        display.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        if (timeLeft <= 0) { clearInterval(timerInterval); display.textContent = '00:00'; }
+      }, 1000);
+      
+      checkBoxes.forEach(cb => cb.classList.add('show'));
+      navWrapper.classList.add('hidden');
+      navBtn.style.display = 'none';
+      
+      isArrivedPickup = true;
+    } else {
+      showPassengerModalPickup();
+    }
+  }
+
+  function getUncheckedPassengersPickup() {
+    const uncheckeds = [];
+    const checks = document.querySelectorAll('#screen-pickup .check-box');
+    checks.forEach((cb, index) => {
+      if (!cb.classList.contains('checked') && !cb.classList.contains('no-show')) {
+        const nameEl = document.getElementById(`pname${index + 1}`);
+        uncheckeds.push({ index, name: nameEl ? nameEl.textContent : 'Passenger', checkId: cb.id });
+      }
+    });
+    return uncheckeds;
+  }
+
+  let currentPassengerPickup = null;
+
+  function showPassengerModalPickup() {
+    const uncheckeds = getUncheckedPassengersPickup();
+    if (uncheckeds.length === 0) return;
+    currentPassengerPickup = uncheckeds[0];
+    document.getElementById('modalName').textContent = currentPassengerPickup.name;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+
+  function confirmPassengerPickup(isOnBoard) {
+    const checkBox = document.getElementById(currentPassengerPickup.checkId);
+    if (isOnBoard) {
+      checkBox.classList.add('checked');
+      checkBox.classList.remove('no-show');
+    } else {
+      checkBox.classList.add('no-show');
+      checkBox.classList.remove('checked');
+    }
+    document.getElementById('modalOverlay').classList.remove('active');
+    updatePickupButtonState();
+  }
+
+  // =========================================================
+  //  TRIP FLOW - DROPOFF
+  // =========================================================
+  let customersOpenDropoff = false;
+
+  function showDropoffScreen() {
+    const pChecks = document.querySelectorAll('#screen-pickup .check-box');
+    const dChecks = document.querySelectorAll('#customerListDropoff .check-box');
+    pChecks.forEach((pCheck, index) => {
+      if (dChecks[index]) {
+        if (pCheck.classList.contains('checked')) {
+          dChecks[index].classList.add('checked');
+          dChecks[index].classList.remove('no-show');
+        } else if (pCheck.classList.contains('no-show')) {
+          dChecks[index].classList.add('no-show');
+          dChecks[index].classList.remove('checked');
+        }
+      }
+    });
+    showScreen('dropoff');
+  }
+
+  function toggleCustomersDropoff() {
+    const list = document.getElementById('customerListDropoff');
+    const icon = document.getElementById('arrowIconDropoff');
+    customersOpenDropoff = !customersOpenDropoff;
+    if (customersOpenDropoff) {
+      list.classList.add('open');
+      icon.classList.add('rotated');
+    } else {
+      list.classList.remove('open');
+      icon.classList.remove('rotated');
+    }
+  }
+
+  function handleActionDropoff() {
+    const btn = document.getElementById('actionBtnDropoff');
+    btn.textContent = 'Loading...';
+    btn.disabled = true;
+    if (!customersOpenDropoff) toggleCustomersDropoff();
+    setTimeout(() => showSummaryScreen(), 500);
+  }
+
+  // =========================================================
+  //  TRIP FLOW - SUMMARY
+  // =========================================================
+  function showSummaryScreen() {
+    const trip = currentTripData;
+    if (!trip) return;
+    
+    document.getElementById('summaryPickupName').textContent = trip.pickup.name;
+    document.getElementById('summaryPickupTime').textContent = 'Pickup at ' + trip.pickup.time;
+    document.getElementById('summaryDropoffName').textContent = trip.dropoff.name;
+    document.getElementById('summaryDropoffTime').textContent = 'Drop-off at ' + trip.dropoff.time;
+    document.getElementById('summaryTripId').textContent = trip.id;
+    document.getElementById('summaryDate').textContent = formatDateFull(today);
+    
+    const summaryList = document.getElementById('summaryCustomerList');
+    summaryList.innerHTML = '';
+    const dChecks = document.querySelectorAll('#customerListDropoff .check-box');
+    trip.customers.forEach((name, index) => {
+      const item = document.createElement('div');
+      item.className = 'customer-item-summary';
+      const isOnBoard = dChecks[index] && dChecks[index].classList.contains('checked');
+      item.innerHTML = `
+        <span>${name}</span>
+        <span class="status-badge ${isOnBoard ? 'on-board' : 'no-show'}">${isOnBoard ? 'On Board' : 'No Show'}</span>
+      `;
+      summaryList.appendChild(item);
+    });
+    
+    showScreen('summary');
+  }
+
+  // =========================================================
+  //  COMPLETE TRIP
+  // =========================================================
+  function completeTrip() {
+    let trips = [];
+    if (currentDayIndex === 0 && state.todayOffer.accepted) {
+      trips = state.todayTrips;
+    } else if (currentDayIndex === 1 && state.tomorrowOffer.accepted) {
+      trips = state.tomorrowTrips;
+    }
+    
+    if (currentTripIndex !== null && trips[currentTripIndex]) {
+      trips.splice(currentTripIndex, 1);
+      if (currentDayIndex === 0) state.todayTrips = trips;
+      else state.tomorrowTrips = trips;
+    }
+    
+    setTimeout(() => {
+      updateJobsUI();
+      showScreen('jobs');
+      document.querySelector('.nav-item[data-screen="jobs"]').classList.add('active');
+    }, 500);
+  }
+
+  // =========================================================
+  //  CONFIRMAR PASAJERO - GLOBAL
+  // =========================================================
+  function confirmPassenger(isOnBoard) {
+    if (document.getElementById('screen-pickup').classList.contains('active')) {
+      confirmPassengerPickup(isOnBoard);
+    } else {
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
+  }
+
+  // =========================================================
+  //  CERRAR MODAL
+  // =========================================================
+  document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('active');
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') document.getElementById('modalOverlay').classList.remove('active');
+  });
+
+  // =========================================================
+  //  SIMULACIÓN DE TIEMPO
+  // =========================================================
+  function startSimulation() {
+    const offerCard = document.getElementById('shiftOfferCard');
+    const todayCard = document.getElementById('todayShiftCard');
+    const nextCard = document.getElementById('nextShiftCard');
+    const emptyMsg = document.getElementById('shiftsEmpty');
+    
+    offerCard.classList.remove('visible');
+    todayCard.classList.remove('visible');
+    nextCard.classList.remove('visible');
+    emptyMsg.classList.remove('hidden');
+    
+    // Actualizar fechas en las tarjetas
+    updateOfferCard(today, false);
+    document.getElementById('today-day').textContent = today.getDate();
+    document.getElementById('today-month-year').textContent = `${getMonthShort(today)} ${today.getFullYear()}`;
+    document.getElementById('today-day-name').textContent = getWeekday(today);
+    document.getElementById('next-day').textContent = tomorrow.getDate();
+    document.getElementById('next-month-year').textContent = `${getMonthShort(tomorrow)} ${tomorrow.getFullYear()}`;
+    document.getElementById('next-day-name').textContent = getWeekday(tomorrow);
+    
+    // Después de 20 segundos - mostrar oferta de shift de hoy
+    setTimeout(() => {
+      emptyMsg.classList.add('hidden');
+      offerCard.classList.add('visible');
+      addAlert('Shift Available', `Today's shift at ${formatDateFull(today)} is now available`, 'event_available');
+    }, 20000);
+    
+    // Después de 70 segundos - mostrar oferta de shift de mañana
+    setTimeout(() => {
+      nextCard.classList.add('visible');
+      state.tomorrowOffer.visible = true;
+      addAlert('Next Shift Available', `Tomorrow's shift at ${formatDateFull(tomorrow)} is now available`, 'event_available');
+    }, 70000);
+  }
+
+  // =========================================================
+  //  MAP
+  // =========================================================
+  let mapInitialized = false;
+
+  function initMap() {
+    if (mapInitialized) return;
+    mapInitialized = true;
+    
+    const map = L.map('map', { zoomControl: false, attributionControl: false })
+      .setView([40.77, -74.00], 11);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: ''
+    }).addTo(map);
+
+    const locations = [
+      { lat: 40.7769, lng: -73.8739, label: 'LGA' },
+      { lat: 40.7569, lng: -73.9760, label: 'Waldorf Astoria' },
+      { lat: 40.8136, lng: -74.0745, label: 'MetLife Stadium' },
+      { lat: 40.6413, lng: -73.7781, label: 'JFK Airport' }
+    ];
+
+    locations.forEach(location => {
+      const markerHtml = `
+        <div class="custom-pin-wrapper">
+          <div class="custom-pin"><span class="material-icons">location_on</span></div>
+          <div class="pin-label">${location.label}</div>
+        </div>
+      `;
+      const icon = L.divIcon({ html: markerHtml, className: '', iconSize: [50, 50], iconAnchor: [25, 25] });
+      L.marker([location.lat, location.lng], { icon }).addTo(map);
+    });
+
+    const bounds = L.latLngBounds([[40.63, -74.10], [40.82, -73.86]]);
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }
+
+  // =========================================================
+  //  INIT
+  // =========================================================
+  document.addEventListener('DOMContentLoaded', function() {
+    updateAlertsUI();
+    updateBadge();
+    
+    document.getElementById('darkModeToggle').addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleDarkMode();
+    });
+
+    const mapObserver = new MutationObserver(() => {
+      if (document.getElementById('screen-map').classList.contains('active')) {
+        initMap();
+      }
+    });
+    mapObserver.observe(document.getElementById('screen-map'), { attributes: true, attributeFilter: ['class'] });
+
+    startSimulation();
+  });
+</script>
+
+</body>
+</html>
