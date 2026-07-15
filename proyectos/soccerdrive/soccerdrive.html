@@ -2054,9 +2054,9 @@
             </div>
             <div class="staging-footer">
               <span class="staging-status" id="stagingStatus">45% completed · 1h 48m remaining</span>
-              <button class="staging-nav" onclick="showToast('Navigating to staging area...')">
-                <svg viewBox="0 0 24 24"><path d="M12 2l7 20-7-4-7 4z"/></svg>
-              </button>
+<button class="staging-nav" onclick="openStagingNavigation()">
+  <svg viewBox="0 0 24 24"><path d="M12 2l7 20-7-4-7 4z"/></svg>
+</button>
             </div>
           </div>
           <div class="jobs-list-container" id="jobsListContainer"></div>
@@ -2518,6 +2518,12 @@
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     return `${weekdays[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
   }
+
+ function openStagingNavigation() {
+  // Abrir Waze con la dirección del staging
+  const address = 'MetLife Stadium - P0';
+  window.open(`https://waze.com/ul?q=${encodeURIComponent(address)}&navigate=yes`, '_blank');
+}
 
   // =========================================================
   //  DATA GENERATION
@@ -3208,12 +3214,10 @@ function openBackupTripDetail() {
   showScreen('tripdetailbackup');
 }
 
-  function handleBackupAction() {
-    showToast('Opening Waze navigation...', 'navigation');
-    // Abrir Waze con la dirección
-    const address = document.getElementById('backupDestination').textContent;
-    window.open(`https://waze.com/ul?q=${encodeURIComponent(address)}&navigate=yes`, '_blank');
-  }
+function handleBackupAction() {
+  const address = document.getElementById('backupDestination').textContent;
+  window.open(`https://waze.com/ul?q=${encodeURIComponent(address)}&navigate=yes`, '_blank');
+}
 
 function handleActionBackup() {
   const btn = document.getElementById('actionBtnBackup');
@@ -3221,15 +3225,12 @@ function handleActionBackup() {
     isGoToBackupArrived = true;
     btn.textContent = 'Arrived Backup';
     btn.classList.add('arrived');
-    showToast('Arrived at backup location!', 'check_circle');
+    // showToast('Arrived at backup location!', 'check_circle');  // <-- ELIMINA O COMENTA ESTA LÍNEA
     document.getElementById('stagingAreaJobs').classList.add('visible');
     startStagingProgress();
-    // Mostrar el botón Navigate
     document.getElementById('navigateBackupWrapper').classList.remove('hidden');
-    // NO redirigir a Jobs, quedarse en la misma pantalla
-    // showScreen('jobs');  // <--- ELIMINA ESTA LÍNEA
   } else {
-    showToast('Backup completed!', 'check_circle');
+    // showToast('Backup completed!', 'check_circle');  // <-- ELIMINA O COMENTA ESTA LÍNEA
     showScreen('jobs');
   }
 }
@@ -3449,7 +3450,6 @@ pickupList.appendChild(item);
   function showPassengerModal() {
     const uncheckeds = getUncheckedPassengers();
     if (uncheckeds.length === 0) {
-      showToast('All passengers confirmed!');
       setTimeout(() => {
         showDropoffScreen();
       }, 500);
