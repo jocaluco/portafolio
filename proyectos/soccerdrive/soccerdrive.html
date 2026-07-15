@@ -1071,12 +1071,12 @@
     opacity: 1;
     overflow: hidden;
   }
-  .navigate-btn-wrapper.hidden {
-    max-height: 0;
-    opacity: 0;
-    margin: 0;
-    padding: 0;
-  }
+.navigate-btn-wrapper.hidden {
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+  padding: 0;
+}
 
   .btn-navigate {
     width: 100%;
@@ -2148,8 +2148,9 @@
           <div class="location-time" id="backupTime">4:00 PM</div>
         </div>
         <div class="navigate-btn-wrapper">
-          <button class="btn-navigate" id="backupBtn" onclick="handleBackupAction()">Navigate</button>
-        </div>
+<div class="navigate-btn-wrapper hidden" id="navigateBackupWrapper">
+  <button class="btn-navigate" id="backupBtn" onclick="handleBackupAction()">Navigate</button>
+</div>
         <div class="backup-details-title">Backup Details</div>
         <div class="time-row-backup">
           <div class="time-block">
@@ -3199,12 +3200,14 @@ function initMiniMapBackup() {
   // =========================================================
   //  TRIP DETAIL - BACKUP
   // =========================================================
-  function openBackupTripDetail() {
-    isGoToBackupArrived = false;
-    document.getElementById('actionBtnBackup').textContent = 'Go To Backup';
-    document.getElementById('actionBtnBackup').classList.remove('arrived');
-    showScreen('tripdetailbackup');
-  }
+function openBackupTripDetail() {
+  isGoToBackupArrived = false;
+  document.getElementById('actionBtnBackup').textContent = 'Go To Backup';
+  document.getElementById('actionBtnBackup').classList.remove('arrived');
+  // Ocultar el botón Navigate al abrir
+  document.getElementById('navigateBackupWrapper').classList.add('hidden');
+  showScreen('tripdetailbackup');
+}
 
   function handleBackupAction() {
     showToast('Opening Waze navigation...', 'navigation');
@@ -3213,30 +3216,23 @@ function initMiniMapBackup() {
     window.open(`https://waze.com/ul?q=${encodeURIComponent(address)}&navigate=yes`, '_blank');
   }
 
-  function handleActionBackup() {
-    const btn = document.getElementById('actionBtnBackup');
-    if (!isGoToBackupArrived) {
-      isGoToBackupArrived = true;
-      btn.textContent = 'Arrived Backup';
-      btn.classList.add('arrived');
-      showToast('Arrived at backup location!', 'check_circle');
-      document.getElementById('stagingAreaJobs').classList.add('visible');
-      startStagingProgress();
-      // Eliminar el viaje backup de la lista
-      let trips = [];
-      if (currentDayIndex === 0 && state.todayOffer.accepted) {
-        trips = state.todayTrips;
-      } else if (currentDayIndex === 1 && state.tomorrowOffer.accepted) {
-        trips = state.tomorrowTrips;
-      }
-      // No eliminamos el backup porque es un viaje especial que no está en trips
-      // Simplemente actualizamos la UI
-      showScreen('jobs');
-    } else {
-      showToast('Backup completed!', 'check_circle');
-      showScreen('jobs');
-    }
+function handleActionBackup() {
+  const btn = document.getElementById('actionBtnBackup');
+  if (!isGoToBackupArrived) {
+    isGoToBackupArrived = true;
+    btn.textContent = 'Arrived Backup';
+    btn.classList.add('arrived');
+    showToast('Arrived at backup location!', 'check_circle');
+    document.getElementById('stagingAreaJobs').classList.add('visible');
+    startStagingProgress();
+    // Mostrar el botón Navigate
+    document.getElementById('navigateBackupWrapper').classList.remove('hidden');
+    showScreen('jobs');
+  } else {
+    showToast('Backup completed!', 'check_circle');
+    showScreen('jobs');
   }
+}
 
   // =========================================================
   //  STAGING PROGRESS
