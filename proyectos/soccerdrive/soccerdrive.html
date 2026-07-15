@@ -969,14 +969,17 @@
     gap: 6px;
     padding: 0 4px;
   }
-  .customer-item {
-    font-size: 15px;
-    font-weight: 500;
-    color: #ffffff;
-    padding: 4px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-  }
-  .customer-item:last-child { border-bottom: none; }
+.customer-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 500;
+  color: #ffffff;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.customer-item:last-child { border-bottom: none; }
 
   .flight-row {
     display: flex;
@@ -1211,21 +1214,21 @@
     padding: 6px 4px;
   }
 
-  .customer-item .check-box {
-    width: 22px;
-    height: 22px;
-    border: 2px solid rgba(255,255,255,0.2);
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-    opacity: 0;
-    pointer-events: none;
-    touch-action: manipulation;
-  }
+.customer-item .check-box {
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  opacity: 0;
+  pointer-events: none;
+  touch-action: manipulation;
+}
   .customer-item .check-box.show {
     opacity: 1;
     pointer-events: auto;
@@ -3254,15 +3257,15 @@
     const pickupList = document.getElementById('pickupCustomerList');
     pickupList.innerHTML = '';
     trip.customers.forEach((name, i) => {
-      const item = document.createElement('div');
-      item.className = 'customer-item';
-      item.innerHTML = `
-        <span id="pname${i+1}">${name}</span>
-        <span class="check-box" id="pcheck${i+1}" onclick="toggleCheckPickup('pcheck${i+1}')">
-          <span class="material-icons">check</span>
-        </span>
-      `;
-      pickupList.appendChild(item);
+const item = document.createElement('div');
+item.className = 'customer-item';
+item.innerHTML = `
+  <span id="pname${i+1}">${name}</span>
+  <span class="check-box" id="pcheck${i+1}" onclick="toggleCheckPickup('pcheck${i+1}')">
+    <span class="material-icons">check</span>
+  </span>
+`;
+pickupList.appendChild(item);
     });
     const dropoffList = document.getElementById('customerListDropoff');
     dropoffList.innerHTML = '';
