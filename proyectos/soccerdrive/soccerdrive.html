@@ -102,15 +102,22 @@
   .offer-shift-card.visible { opacity: 1; transform: translateY(0); max-height: 500px; padding: 14px 16px 14px; }
   .offer-shift-card.accepted .button-row { display: none; }
 
-  .offer-shift-card .date-section-next {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    padding: 0;
-    margin: 0 0 2px 0;
-    position: relative;
-  }
+.offer-shift-card .car-icon-btn {
+  width: 30px;
+  height: 30px;
+  background: rgba(50, 98, 149, 0.15);
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: auto;
+  position: relative;
+  z-index: 10;
+}
   .offer-shift-card .date-section-next .day-number,
   .offer-shift-card .date-section-next .month-year,
   .offer-shift-card .date-section-next .day-name {
