@@ -118,15 +118,21 @@
   position: relative;
   z-index: 10;
 }
+
+.offer-shift-card .date-section-next-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 2px;
+}
+ 
 .offer-shift-card .date-section-next {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 10px;
-  padding: 0;
-  margin: 0 0 2px 0;
-  position: relative;
-  width: 100%;
+  flex: 1;
 }
 
 .offer-shift-card .date-section-next .day-number,
@@ -143,22 +149,20 @@
 .offer-shift-card .date-section-next .month-year { text-transform: uppercase; }
 .offer-shift-card .date-section-next .day-name { text-transform: uppercase; }
 
-  .offer-shift-card .car-icon-btn {
-    width: 30px;
-    height: 30px;
-    background: rgba(50, 98, 149, 0.15);
-    border-radius: 50%;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-    margin-left: auto;
-    position: relative;
-    z-index: 10;
-  }
+.offer-shift-card .car-icon-btn {
+  width: 30px;
+  height: 30px;
+  background: rgba(50, 98, 149, 0.15);
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: 10px;
+}
   .phone.light-mode .offer-shift-card .car-icon-btn { background: rgba(50, 98, 149, 0.08); }
   .offer-shift-card .car-icon-btn:hover { background: rgba(50, 98, 149, 0.25); }
   .offer-shift-card .car-icon-btn:active { transform: scale(0.95); }
@@ -2002,14 +2006,16 @@
 
 <!-- Luego la oferta (turno nuevo) -->
 <div class="offer-shift-card" id="offerShiftCard">
+<div class="date-section-next-wrapper">
   <div class="date-section-next">
     <span class="day-number" id="offer-day"></span>
     <span class="month-year" id="offer-month-year"></span>
     <span class="day-name" id="offer-day-name"></span>
-    <button class="car-icon-btn" onclick="showVehicleOffer()">
-      <span class="material-icons">directions_car</span>
-    </button>
   </div>
+  <button class="car-icon-btn" onclick="showVehicleOffer()">
+    <span class="material-icons">directions_car</span>
+  </button>
+</div>
   <div class="time-row-next" id="timeRowNext">
     <div class="time-block-next">
       <span class="label">Check in</span>
