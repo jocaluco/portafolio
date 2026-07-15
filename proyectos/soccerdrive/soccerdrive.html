@@ -2686,57 +2686,58 @@
     icon.textContent = container.classList.contains('light-mode') ? 'light_mode' : 'dark_mode';
   }
 
-  // =========================================================
-  //  NAVEGACIÓN - CORREGIDA
-  // =========================================================
-  function showScreen(name) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    const target = document.getElementById('screen-' + name);
-    if (target) target.classList.add('active');
-    
-    document.body.className = '';
-    document.body.classList.add('screen-' + name + '-active');
-    
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    const navItem = document.querySelector(`.nav-item[data-screen="${name}"]`);
-    if (navItem) navItem.classList.add('active');
+// =========================================================
+//  NAVEGACIÓN - CORREGIDA
+// =========================================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen-' + name);
+  if (target) target.classList.add('active');
+  
+  document.body.className = '';
+  document.body.classList.add('screen-' + name + '-active');
+  
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navItem = document.querySelector(`.nav-item[data-screen="${name}"]`);
+  if (navItem) navItem.classList.add('active');
 
-    // Ocultar todos los botones flotantes
-    document.getElementById('btnWrapperPickup').style.display = 'none';
-    document.getElementById('btnWrapperDropoff').style.display = 'none';
-    document.getElementById('btnWrapperSummary').style.display = 'none';
-    document.getElementById('startBtnWrapper').classList.remove('visible');
+  // Ocultar todos los botones flotantes
+  document.getElementById('btnWrapperPickup').style.display = 'none';
+  document.getElementById('btnWrapperDropoff').style.display = 'none';
+  document.getElementById('btnWrapperSummary').style.display = 'none';
+  document.getElementById('startBtnWrapper').classList.remove('visible');
 
-    // Mostrar el botón correspondiente
-    if (name === 'pickup') {
-      document.getElementById('btnWrapperPickup').style.display = 'block';
-    } else if (name === 'dropoff') {
-      document.getElementById('btnWrapperDropoff').style.display = 'block';
-    } else if (name === 'summary') {
-      document.getElementById('btnWrapperSummary').style.display = 'block';
-    } else if (name === 'tripdetail') {
-      document.getElementById('startBtnWrapper').classList.add('visible');
-    }
+  // Mostrar el botón correspondiente
+  if (name === 'pickup') {
+    document.getElementById('btnWrapperPickup').style.display = 'block';
+  } else if (name === 'dropoff') {
+    document.getElementById('btnWrapperDropoff').style.display = 'block';
+  } else if (name === 'summary') {
+    document.getElementById('btnWrapperSummary').style.display = 'block';
+  } else if (name === 'tripdetail') {
+    document.getElementById('startBtnWrapper').classList.add('visible');
+  }
 
-    // Inicializar mapa si es tripdetail
-    if (name === 'tripdetail' && currentTripData) {
-      setTimeout(() => {
-        initMiniMap(currentTripData);
-      }, 300);
-    }
-    
-    // Inicializar mapa backup si es tripdetailbackup
-if (name === 'tripdetailbackup') {
-  setTimeout(() => {
-    initMiniMapBackup();
-  }, 300);
+  // Inicializar mapa si es tripdetail
+  if (name === 'tripdetail' && currentTripData) {
+    setTimeout(() => {
+      initMiniMap(currentTripData);
+    }, 300);
+  }
+  
+  // Inicializar mapa backup si es tripdetailbackup
+  if (name === 'tripdetailbackup') {
+    setTimeout(() => {
+      initMiniMapBackup();
+    }, 300);
+  }
 }
 
-  function selectNavItem(screen, btn) {
-    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-    btn.classList.add('active');
-    showScreen(screen);
-  }
+function selectNavItem(screen, btn) {
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  btn.classList.add('active');
+  showScreen(screen);
+}
 
   // =========================================================
   //  ALERTS
