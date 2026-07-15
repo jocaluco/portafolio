@@ -1924,102 +1924,100 @@
       </button>
       <div class="scroll-content">
         <div id="shiftsEmpty" class="shifts-empty">No shifts available. Waiting for assignment...</div>
-<div class="scroll-content">
-  <div id="shiftsEmpty" class="shifts-empty">No shifts available. Waiting for assignment...</div>
 
-  <!-- TODAY SHIFT CARD - PRIMERO -->
-  <div class="card" id="todayShiftCard">
-    <div class="date-section">
-      <span class="day-number" id="today-day"></span>
-      <span class="month-year" id="today-month-year"></span>
-      <span class="day-name" id="today-day-name"></span>
-    </div>
-    <div class="time-row">
-      <div class="time-block">
-        <span class="label">Check in</span>
-        <span class="value">11:00 AM</span>
-      </div>
-      <div class="duration-center">
-        <span class="duration-value">12 hr</span>
-      </div>
-      <div class="time-block check-out">
-        <span class="label">Check out</span>
-        <span class="value">11:00 PM</span>
-      </div>
-    </div>
-    <div class="divider-dashed"></div>
-    <div class="staging-row">
-      <div class="staging-text">
-        <div class="staging-label">Staging Area</div>
-        <div class="staging-value" style="font-weight: 400;">NYNJHOT-Waldorf Astoria New York (VIP)</div>
-      </div>
-      <button class="nav-button">
-        <svg viewBox="0 0 24 24"><path d="M12 2l7 20-7-4-7 4z"/></svg>
-      </button>
-    </div>
-    <div class="divider-dashed"></div>
-    <div class="box-row">
-      <div class="divider-line"></div>
-      <div class="vehicle-icon-center">
-        <span class="material-icons">directions_car</span>
-      </div>
-      <div class="box">
-        <div class="box-value">N129</div>
-        <div class="box-label">Fleet No.</div>
-      </div>
-      <div class="box">
-        <div class="box-value">9XTH525</div>
-        <div class="box-label">Hyundai Palisade</div>
-      </div>
-    </div>
-    <button class="shift-btn" id="startTodayBtn" onclick="toggleShift()">Start Shift</button>
-  </div>
+        <div class="offer-shift-card" id="offerShiftCard">
+          <div class="date-section-next">
+            <span class="day-number" id="offer-day"></span>
+            <span class="month-year" id="offer-month-year"></span>
+            <span class="day-name" id="offer-day-name"></span>
+            <button class="car-icon-btn" onclick="showVehicleOffer()">
+              <span class="material-icons">directions_car</span>
+            </button>
+          </div>
+          <div class="time-row-next" id="timeRowNext">
+            <div class="time-block-next">
+              <span class="label">Check in</span>
+              <span class="value">11:00 AM</span>
+            </div>
+            <div class="duration-center-next">
+              <span class="duration-value">12 hr</span>
+            </div>
+            <div class="time-block-next check-out">
+              <span class="label">Check out</span>
+              <span class="value">11:00 PM</span>
+            </div>
+          </div>
+          <div class="vehicle-section" id="vehicleSectionOffer">
+            <div class="box-row-next">
+              <div class="divider-line-next"></div>
+              <div class="vehicle-icon-center-next">
+                <span class="material-icons">directions_car</span>
+              </div>
+              <div class="box">
+                <div class="box-value-next">N129</div>
+                <div class="box-label-next">Fleet No.</div>
+              </div>
+              <div class="box">
+                <div class="box-value-next">9XTH525</div>
+                <div class="box-label-next">Hyundai Palisade</div>
+              </div>
+            </div>
+          </div>
+          <div class="button-row" id="buttonRowOffer">
+            <button class="btn-accept" id="acceptOfferBtn" onclick="acceptOffer()">Accept</button>
+            <button class="btn-cancel" onclick="cancelOffer()">Cancel</button>
+          </div>
+        </div>
 
-  <!-- OFFER SHIFT CARD - SEGUNDO -->
-  <div class="offer-shift-card" id="offerShiftCard">
-    <div class="date-section-next">
-      <span class="day-number" id="offer-day"></span>
-      <span class="month-year" id="offer-month-year"></span>
-      <span class="day-name" id="offer-day-name"></span>
-      <button class="car-icon-btn" onclick="showVehicleOffer()">
-        <span class="material-icons">directions_car</span>
-      </button>
-    </div>
-    <div class="time-row-next" id="timeRowNext">
-      <div class="time-block-next">
-        <span class="label">Check in</span>
-        <span class="value">11:00 AM</span>
-      </div>
-      <div class="duration-center-next">
-        <span class="duration-value">12 hr</span>
-      </div>
-      <div class="time-block-next check-out">
-        <span class="label">Check out</span>
-        <span class="value">11:00 PM</span>
-      </div>
-    </div>
-    <div class="vehicle-section" id="vehicleSectionOffer">
-      <div class="box-row-next">
-        <div class="divider-line-next"></div>
-        <div class="vehicle-icon-center-next">
-          <span class="material-icons">directions_car</span>
+        <div class="card" id="todayShiftCard">
+          <div class="date-section">
+            <span class="day-number" id="today-day"></span>
+            <span class="month-year" id="today-month-year"></span>
+            <span class="day-name" id="today-day-name"></span>
+          </div>
+          <div class="time-row">
+            <div class="time-block">
+              <span class="label">Check in</span>
+              <span class="value">11:00 AM</span>
+            </div>
+            <div class="duration-center">
+              <span class="duration-value">12 hr</span>
+            </div>
+            <div class="time-block check-out">
+              <span class="label">Check out</span>
+              <span class="value">11:00 PM</span>
+            </div>
+          </div>
+          <div class="divider-dashed"></div>
+          <div class="staging-row">
+            <div class="staging-text">
+              <div class="staging-label">Staging Area</div>
+              <div class="staging-value" style="font-weight: 400;">NYNJHOT-Waldorf Astoria New York (VIP)</div>
+            </div>
+            <button class="nav-button">
+              <svg viewBox="0 0 24 24"><path d="M12 2l7 20-7-4-7 4z"/></svg>
+            </button>
+          </div>
+          <div class="divider-dashed"></div>
+          <div class="box-row">
+            <div class="divider-line"></div>
+            <div class="vehicle-icon-center">
+              <span class="material-icons">directions_car</span>
+            </div>
+            <div class="box">
+              <div class="box-value">N129</div>
+              <div class="box-label">Fleet No.</div>
+            </div>
+            <div class="box">
+              <div class="box-value">9XTH525</div>
+              <div class="box-label">Hyundai Palisade</div>
+            </div>
+          </div>
+          <button class="shift-btn" id="startTodayBtn" onclick="toggleShift()">Start Shift</button>
         </div>
-        <div class="box">
-          <div class="box-value-next">N129</div>
-          <div class="box-label-next">Fleet No.</div>
-        </div>
-        <div class="box">
-          <div class="box-value-next">9XTH525</div>
-          <div class="box-label-next">Hyundai Palisade</div>
-        </div>
       </div>
-    </div>
-    <div class="button-row" id="buttonRowOffer">
-      <button class="btn-accept" id="acceptOfferBtn" onclick="acceptOffer()">Accept</button>
-      <button class="btn-cancel" onclick="cancelOffer()">Cancel</button>
     </div>
   </div>
-</div>
 
   <!-- =========================================================
      SCREEN: JOBS
