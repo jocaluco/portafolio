@@ -3226,7 +3226,8 @@ function handleActionBackup() {
     startStagingProgress();
     // Mostrar el botón Navigate
     document.getElementById('navigateBackupWrapper').classList.remove('hidden');
-    showScreen('jobs');
+    // NO redirigir a Jobs, quedarse en la misma pantalla
+    // showScreen('jobs');  // <--- ELIMINA ESTA LÍNEA
   } else {
     showToast('Backup completed!', 'check_circle');
     showScreen('jobs');
